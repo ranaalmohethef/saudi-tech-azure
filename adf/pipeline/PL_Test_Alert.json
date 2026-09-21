@@ -1,0 +1,18 @@
+{
+	"name": "PL_Test_Alert",
+	"properties": {
+		"activities": [
+			{
+				"name": "Fail1",
+				"type": "Fail",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "Test alert",
+					"errorCode": "TEST"
+				}
+			}
+		],
+		"annotations": []
+	}
+}
