@@ -4,3 +4,5 @@ azure-storage-blob>=12.19
 pandas>=2.2,<3
 PyYAML>=6,<7
 requests>=2.31,<3
+psycopg2-binary
+pyarrow
