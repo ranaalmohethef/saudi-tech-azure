@@ -172,6 +172,9 @@
 				"userProperties": [],
 				"typeProperties": {
 					"functionName": "quality_check",
+					"body": {
+						"caller": "adf"
+					},
 					"method": "POST"
 				},
 				"linkedServiceName": {
@@ -200,6 +203,9 @@
 				"userProperties": [],
 				"typeProperties": {
 					"functionName": "update_stats",
+					"body": {
+						"caller": "adf"
+					},
 					"method": "POST"
 				},
 				"linkedServiceName": {

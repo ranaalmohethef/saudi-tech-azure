@@ -98,6 +98,9 @@
 				"userProperties": [],
 				"typeProperties": {
 					"functionName": "process/openalex",
+					"body": {
+						"caller": "adf"
+					},
 					"method": "POST"
 				},
 				"linkedServiceName": {
