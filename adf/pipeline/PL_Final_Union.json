@@ -67,6 +67,8 @@
 			{
 				"name": "PublishFinal",
 				"type": "Script",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "ValidateCandidate",
