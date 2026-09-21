@@ -370,6 +370,90 @@
 							"referenceName": "LS_Func_Process",
 							"type": "LinkedServiceReference"
 						}
+					},
+					{
+						"name": "EmailSuccess",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "UpdateStats",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": "https://prod-75.eastus.logic.azure.com:443/workflows/b40c3d3d6eb2491fa8768a8ba9bdf93b/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=_W7j3PpthVuC4y6cv51kmhM6To4sMTITMtZFGLRgfF4",
+							"body": {
+								"status": "Succeeded",
+								"pipeline": "@{pipeline().Pipeline}",
+								"runId": "@{pipeline().RunId}",
+								"message": "final_dataset has @{activity('QualityCheck').output.total_rows} rows and all quality checks passed. Validated records: @{activity('UpdateStats').output.validated_total}."
+							}
+						}
+					},
+					{
+						"name": "EmailFailure",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "UpdateStats",
+								"dependencyConditions": [
+									"Failed",
+									"Skipped"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": "https://prod-75.eastus.logic.azure.com:443/workflows/b40c3d3d6eb2491fa8768a8ba9bdf93b/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=_W7j3PpthVuC4y6cv51kmhM6To4sMTITMtZFGLRgfF4",
+							"body": {
+								"status": "Failed",
+								"pipeline": "@{pipeline().Pipeline}",
+								"runId": "@{pipeline().RunId}",
+								"message": "PL_Master failed. Open Data Factory, go to Monitor, and search for this Run ID to see which step failed."
+							}
+						}
+					},
+					{
+						"name": "FailPipeline",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "EmailFailure",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "PL_Master failed",
+							"errorCode": "500"
+						}
 					}
 				],
 				"policy": {
