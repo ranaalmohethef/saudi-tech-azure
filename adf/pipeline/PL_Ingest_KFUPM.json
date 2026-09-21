@@ -61,6 +61,9 @@
 				"userProperties": [],
 				"typeProperties": {
 					"functionName": "process/kfupm",
+					"body": {
+						"caller": "adf"
+					},
 					"method": "POST"
 				},
 				"linkedServiceName": {
