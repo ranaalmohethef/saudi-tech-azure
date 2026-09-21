@@ -150,6 +150,62 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "QualityCheck",
+				"type": "AzureFunctionActivity",
+				"dependsOn": [
+					{
+						"activity": "RunFinal",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"functionName": "quality_check",
+					"method": "POST"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_Func_Process",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "UpdateStats",
+				"type": "AzureFunctionActivity",
+				"dependsOn": [
+					{
+						"activity": "QualityCheck",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"functionName": "update_stats",
+					"method": "POST"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_Func_Process",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"annotations": [],

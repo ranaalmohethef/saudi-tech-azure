@@ -36,7 +36,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "DS_Final_Dataset",
+						"referenceName": "DS_Final_Dataset_Candidate",
 						"type": "DatasetReference"
 					},
 					"name": "sinkFinal"
@@ -146,7 +146,7 @@
 				"     ignoreNoFilesFound: false,",
 				"     wildcardPaths:['interim/cleaned/openalex/*_validated.csv']) ~> srcOpenAlex",
 				"srcKfupm derive(publication_year = toInteger(publication_year)) ~> castKfupm",
-				"srcPg, srcKsu, srcKfupm, castOpenAlex union(byName: true)~> unionAll",
+				"srcPg, srcKsu, castKfupm, castOpenAlex union(byName: true)~> unionAll",
 				"unionAll derive(has_doi = !isNull(doi) && doi != '',",
 				"          abstract_word_count = iif(isNull(abstract) || trim(abstract) == '', 0, size(split(regexReplace(trim(abstract), `\\s+`, ' '), ' '))),",
 				"          tech_text = concat(trim(regexReplace(regexReplace(regexReplace(regexReplace(lower(coalesce(title, '')), `[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2212_]+`, ' '), `\\s+`, ' '), `(?<!\\w)computer vision syndrome(?!\\w)`, ' '), `\\s+`, ' ')), ' | ', trim(regexReplace(regexReplace(regexReplace(regexReplace(lower(coalesce(iif(university == 'KSU', author_keywords, abstract), '')), `[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2212_]+`, ' '), `\\s+`, ' '), `(?<!\\w)computer vision syndrome(?!\\w)`, ' '), `\\s+`, ' ')))) ~> recompute",
@@ -189,7 +189,8 @@
 				"          url as string,",
 				"          source as string,",
 				"          has_doi as boolean,",
-				"          abstract_word_count as integer",
+				"          abstract_word_count as integer,",
+				"          loaded_at as timestamp",
 				"     ),",
 				"     deletable:false,",
 				"     insertable:true,",
