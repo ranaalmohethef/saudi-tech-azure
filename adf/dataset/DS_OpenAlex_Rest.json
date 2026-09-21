@@ -1,0 +1,24 @@
+{
+	"name": "DS_OpenAlex_Rest",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_OpenAlex_API",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ror": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@concat('works?filter=institutions.ror:', dataset().ror, ',from_publication_date:2023-01-01,to_publication_date:2026-12-31,has_doi:true,primary_topic.field.id:fields/17&per-page=200&cursor=*&mailto=al3alee@gmail.com')",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

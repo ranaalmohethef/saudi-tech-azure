@@ -1,0 +1,123 @@
+{
+	"name": "PL_Ingest_OpenAlex",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachUniversity",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.rors",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "CopyOpenAlex",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "RestSource",
+									"httpRequestTimeout": "00:01:40",
+									"requestInterval": "00.00:00:00.010",
+									"requestMethod": "GET",
+									"paginationRules": {
+										"QueryParameters.cursor": "$.meta.next_cursor",
+										"EndCondition:$.results": "Empty"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings",
+										"filePattern": "arrayOfObjects"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_OpenAlex_Rest",
+									"type": "DatasetReference",
+									"parameters": {
+										"ror": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_OpenAlex_Json_Write",
+									"type": "DatasetReference",
+									"parameters": {
+										"ror": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "ProcessOpenAlex",
+				"type": "AzureFunctionActivity",
+				"dependsOn": [
+					{
+						"activity": "ForEachUniversity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"functionName": "process/openalex",
+					"method": "POST"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_Func_Process",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"rors": {
+				"type": "array",
+				"defaultValue": [
+					"02ma4wv74",
+					"052kwzs30",
+					"04jt46d36"
+				]
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-09-21T06:58:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

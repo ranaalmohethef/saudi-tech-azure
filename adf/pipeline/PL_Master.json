@@ -1,0 +1,159 @@
+{
+	"name": "PL_Master",
+	"properties": {
+		"activities": [
+			{
+				"name": "RunKaust",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "KAUST_Clean_Pipeline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "RunCrossref",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "RunKaust",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Ingest_Crossref",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "RunKsu",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "RunCrossref",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Ingest_KSU",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"year": {
+							"value": "@createArray(2023,2024,2025)",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "RunKfupm",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "RunKsu",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Ingest_KFUPM",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"year": {
+							"value": "@createArray(2023,2024,2025,2026)",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "RunFinal",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "RunOpenAlex",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Final_Union",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "RunOpenAlex",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "RunKfupm",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Ingest_OpenAlex",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"rors": {
+							"value": "@createArray('02ma4wv74','052kwzs30','04jt46d36')",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-09-20T14:14:51Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

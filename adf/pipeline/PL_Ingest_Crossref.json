@@ -1,0 +1,122 @@
+{
+	"name": "PL_Ingest_Crossref",
+	"properties": {
+		"activities": [
+			{
+				"name": "FetchCrossref",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:05:00",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET",
+						"paginationRules": {
+							"QueryParameters.cursor": "$.message['next-cursor']",
+							"EndCondition:$.message.items": "Empty"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings",
+							"filePattern": "arrayOfObjects"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_Crossref_Rest",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_Crossref_Json_Write",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "CleanCrossref",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "FetchCrossref",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Crossref_Clean_DF",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "MergeToFinal",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "CleanCrossref",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "LS_Postgres",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "INSERT INTO research.publications AS p (research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, has_doi, abstract_word_count) SELECT DISTINCT ON (research_id) research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, COALESCE(has_doi, doi IS NOT NULL), COALESCE(abstract_word_count, 0) FROM research.publications_staging ORDER BY research_id ON CONFLICT (research_id) DO UPDATE SET university = EXCLUDED.university, title = EXCLUDED.title, authors = EXCLUDED.authors, publication_year = EXCLUDED.publication_year, publication_date = EXCLUDED.publication_date, abstract = EXCLUDED.abstract, research_field = EXCLUDED.research_field, tech_category = EXCLUDED.tech_category, journal = EXCLUDED.journal, doi = EXCLUDED.doi, url = EXCLUDED.url, source = EXCLUDED.source, has_doi = EXCLUDED.has_doi, abstract_word_count = EXCLUDED.abstract_word_count, loaded_at = now();"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-09-19T15:23:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

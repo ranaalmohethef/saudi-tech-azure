@@ -1,0 +1,28 @@
+{
+	"name": "DS_KFUPM_Raw_ADLS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Sink_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "Raw/kfupm",
+				"fileSystem": "saudi-tech-research"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

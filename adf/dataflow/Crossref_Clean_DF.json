@@ -1,0 +1,147 @@
+{
+	"name": "Crossref_Clean_DF",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Crossref_Json",
+						"type": "DatasetReference"
+					},
+					"name": "srcCrossref"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Publications_Staging",
+						"type": "DatasetReference"
+					},
+					"name": "sinkPostgres"
+				}
+			],
+			"transformations": [
+				{
+					"name": "flattenItems"
+				},
+				{
+					"name": "readFields"
+				},
+				{
+					"name": "selectSchema"
+				},
+				{
+					"name": "validForDb"
+				},
+				{
+					"name": "addMetrics"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          message as (items as (DOI as string, ISBN as long[], ISSN as string[], URL as string, abstract as string, accepted as ({date-parts} as short[][]), {alternative-id} as string[], archive as string[], {article-number} as string, assertion as (URL as string, explanation as (URL as string), group as (label as string, name as string), label as string, name as string, order as short, value as string)[], author as (ORCID as string, affiliation as (department as string[], id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string, place as string[])[], {authenticated-orcid} as boolean, family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string, suffix as string)[], chair as (affiliation as (id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string)[], family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string)[], {container-title} as string[], {content-domain} as ({crossmark-restriction} as boolean, domain as string[]), contributor as (affiliation as string[], family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string)[], created as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long), deposited as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long), description as string, {edition-number} as boolean, editor as (affiliation as string[], family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string)[], funder as (DOI as string, award as string[], {award-info} as ({award-number} as string[], id as ({asserted-by} as string, id as string, {id-type} as string)[])[], {doi-asserted-by} as string, id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string)[], {group-title} as string, indexed as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long, version as string), institution as (id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string)[], {is-referenced-by-count} as short, {isbn-type} as (type as string, value as long)[], {issn-type} as (type as string, value as string)[], issue as short, issued as ({date-parts} as short[][]), {journal-issue} as (issue as short, {published-online} as ({date-parts} as short[][]), {published-print} as ({date-parts} as short[][])), language as string, license as (URL as string, {content-version} as string, {delay-in-days} as short, start as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long))[], link as (URL as string, {content-type} as string, {content-version} as string, {intended-application} as string)[], member as integer, page as string, posted as ({date-parts} as short[][]), prefix as double, published as ({date-parts} as short[][]), {published-online} as ({date-parts} as short[][]), {published-print} as ({date-parts} as short[][]), publisher as string, reference as (DOI as string, ISSN as string, {article-title} as string, author as string, {doi-asserted-by} as string, edition as string, {first-page} as string, {issn-type} as string, issue as string, {journal-title} as string, key as string, type as string, unstructured as string, volume as string, {volume-title} as string, year as string)[], {reference-count} as short, {references-count} as short, relation as ({has-preprint} as ({asserted-by} as string, id as string, {id-type} as string)[], {has-review} as ({asserted-by} as string, id as string, {id-type} as string)[], {has-version} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-based-on} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-financed-by} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-part-of} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-preprint-of} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-review-of} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-same-as} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-supplement-to} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-supplemented-by} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-version-of} as ({asserted-by} as string, id as string, {id-type} as string)[], references as ({asserted-by} as string, id as string, {id-type} as string)[]), resource as (primary as (URL as string)), review as (stage as string, type as string), score as double, {short-container-title} as string[], source as string, subtype as string, title as string[], type as string, {update-policy} as string, {updated-by} as (DOI as string, label as string, source as string, type as string, updated as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long))[], version as (language as string, version as short), volume as string)[], {items-per-page} as short, {next-cursor} as string, query as ({search-terms} as string, {start-index} as boolean), {total-results} as short),",
+				"          {message-type} as string,",
+				"          {message-version} as string,",
+				"          status as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'arrayOfDocuments') ~> srcCrossref",
+				"srcCrossref foldDown(unroll(message.items, message.items),",
+				"     mapColumn(",
+				"          DOI = message.items.DOI,",
+				"          title = message.items.title,",
+				"          author = message.items.author,",
+				"          container_title = message.items.{container-title},",
+				"          URL = message.items.URL,",
+				"          abstract = message.items.abstract,",
+				"          date_parts = message.items.published.{date-parts}",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenItems",
+				"flattenItems derive(doi_clean = lower(trim(DOI)),",
+				"          research_id = lower(trim(DOI)),",
+				"          title_clean = trim(title[1]),",
+				"          authors_clean = reduce(author, '', #acc + iif(#acc == '', '', '; ') + trim(coalesce(#item.given, '') + ' ' + coalesce(#item.family, '')), #result),",
+				"          journal_clean = iif(isNull(container_title) || size(container_title) == 0, toString(null()), container_title[1]),",
+				"          url_clean = URL,",
+				"          publication_year = toInteger(date_parts[1][1]),",
+				"          publication_date = iif(size(date_parts[1]) >= 3, toDate(concat(toString(date_parts[1][1]), '-', lpad(toString(date_parts[1][2]), 2, '0'), '-', lpad(toString(date_parts[1][3]), 2, '0')), 'yyyy-MM-dd'), toDate(null())),",
+				"          abstract_clean = iif(isNull(abstract), toString(null()), trim(regexReplace(regexReplace(abstract, `<[^>]+>`, ' '), `\\s+`, ' '))),",
+				"          university = 'KAUST',",
+				"          source = 'Crossref',",
+				"          research_field = toString(null()),",
+				"          tech_category = toString(null())) ~> readFields",
+				"readFields select(mapColumn(",
+				"          doi = doi_clean,",
+				"          research_id,",
+				"          title = title_clean,",
+				"          authors = authors_clean,",
+				"          journal = journal_clean,",
+				"          url = url_clean,",
+				"          publication_year,",
+				"          publication_date,",
+				"          abstract = abstract_clean,",
+				"          university,",
+				"          source,",
+				"          research_field,",
+				"          tech_category",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectSchema",
+				"selectSchema filter(!isNull(doi) && doi != '' && !isNull(title) && title != ''",
+				"&& !isNull(authors) && authors != '' && !isNull(url) && url != ''",
+				"&& regexMatch(doi, `^10\\.\\d{4,9}/\\S+$`)",
+				"&& publication_year >= 2023 && publication_year <= 2026) ~> validForDb",
+				"validForDb derive(has_doi = !isNull(doi) && doi != '',",
+				"          abstract_word_count = iif(isNull(abstract) || abstract == '', 0, size(split(abstract, ' ')))) ~> addMetrics",
+				"addMetrics sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          research_id as string,",
+				"          university as string,",
+				"          title as string,",
+				"          authors as string,",
+				"          publication_year as integer,",
+				"          publication_date as date,",
+				"          abstract as string,",
+				"          research_field as string,",
+				"          tech_category as string,",
+				"          journal as string,",
+				"          doi as string,",
+				"          url as string,",
+				"          source as string,",
+				"          has_doi as boolean,",
+				"          abstract_word_count as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          research_id,",
+				"          university,",
+				"          title,",
+				"          authors,",
+				"          publication_year,",
+				"          publication_date,",
+				"          abstract,",
+				"          research_field,",
+				"          tech_category,",
+				"          journal,",
+				"          doi,",
+				"          url,",
+				"          source,",
+				"          has_doi,",
+				"          abstract_word_count",
+				"     )) ~> sinkPostgres"
+			]
+		}
+	}
+}

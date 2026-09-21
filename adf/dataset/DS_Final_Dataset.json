@@ -1,0 +1,108 @@
+{
+	"name": "DS_Final_Dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Postgres",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzurePostgreSqlTable",
+		"schema": [
+			{
+				"name": "research_id",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "university",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "title",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "authors",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "publication_year",
+				"type": "integer",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "publication_date",
+				"type": "date",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "abstract",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "research_field",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "tech_category",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "journal",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "doi",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "url",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "source",
+				"type": "text",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "has_doi",
+				"type": "boolean",
+				"precision": 0,
+				"scale": 0
+			},
+			{
+				"name": "abstract_word_count",
+				"type": "integer",
+				"precision": 0,
+				"scale": 0
+			}
+		],
+		"typeProperties": {
+			"schema": "research",
+			"table": "final_dataset"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

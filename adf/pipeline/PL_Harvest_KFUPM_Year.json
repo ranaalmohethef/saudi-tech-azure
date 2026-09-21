@@ -1,0 +1,274 @@
+{
+	"name": "PL_Harvest_KFUPM_Year",
+	"properties": {
+		"activities": [
+			{
+				"name": "SetFirstUrl",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "relUrl",
+					"value": {
+						"value": "@concat('oai?verb=ListRecords&metadataPrefix=mods&set=publications:year', pipeline().parameters.year)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "UntilNoToken",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "SetFirstUrl",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(string(variables('done')), 'true')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "GetPage",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 3,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"method": "GET",
+								"url": {
+									"value": "@concat('https://pure.kfupm.edu.sa/ws/', variables('relUrl'))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SavePage",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "GetPage",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 3,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "BinarySource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "BinaryReadSettings"
+									}
+								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_KFUPM_Http",
+									"type": "DatasetReference",
+									"parameters": {
+										"relUrl": "@variables('relUrl')"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_KFUPM_Raw_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@concat('year', pipeline().parameters.year, '_page', substring(concat('0000', variables('page')), length(variables('page')), 4), '.xml')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "SetToken",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "SavePage",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "token",
+								"value": {
+									"value": "@string(xpath(xml(activity('GetPage').output.Response), 'string(//*[local-name()=\"resumptionToken\"])'))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "IfMore",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "SetToken",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@not(empty(trim(variables('token'))))",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "SetDone",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "done",
+											"value": "true"
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "SetNextUrl",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "relUrl",
+											"value": {
+												"value": "@concat('oai?verb=ListRecords&resumptionToken=', encodeUriComponent(variables('token')))",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "CalcPage",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "tmp",
+											"value": {
+												"value": "@string(add(int(variables('page')), 1))",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "SetPage",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "CalcPage",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "page",
+											"value": {
+												"value": "@variables('tmp')",
+												"type": "Expression"
+											}
+										}
+									}
+								]
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			}
+		],
+		"parameters": {
+			"year": {
+				"type": "string",
+				"defaultValue": "2023"
+			}
+		},
+		"variables": {
+			"relUrl": {
+				"type": "String"
+			},
+			"token": {
+				"type": "String"
+			},
+			"page": {
+				"type": "String",
+				"defaultValue": "0"
+			},
+			"tmp": {
+				"type": "String",
+				"defaultValue": "0"
+			},
+			"done": {
+				"type": "String",
+				"defaultValue": "false"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-09-19T20:46:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

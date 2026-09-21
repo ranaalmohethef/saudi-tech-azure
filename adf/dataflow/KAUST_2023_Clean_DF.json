@@ -1,0 +1,189 @@
+{
+	"name": "KAUST_2023_Clean_DF",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "KAUST_2023_Raw_DS",
+						"type": "DatasetReference"
+					},
+					"name": "srcKAUST2023"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ADLS_Sink_saudi",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkKAUSTClean"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_Publications_Staging",
+						"type": "DatasetReference"
+					},
+					"name": "sinkPostgres"
+				}
+			],
+			"transformations": [
+				{
+					"name": "trimAndNull"
+				},
+				{
+					"name": "parseDate"
+				},
+				{
+					"name": "keep2023"
+				},
+				{
+					"name": "dedupPrep"
+				},
+				{
+					"name": "rankDuplicates"
+				},
+				{
+					"name": "keepFirst"
+				},
+				{
+					"name": "addFields"
+				},
+				{
+					"name": "selectSchema"
+				},
+				{
+					"name": "castTypes"
+				},
+				{
+					"name": "validForDb"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Type as string,",
+				"          Title as string,",
+				"          Authors as string,",
+				"          Journal as string,",
+				"          Publisher as string,",
+				"          DOI as string,",
+				"          Handle as string,",
+				"          {Publication Date} as string,",
+				"          Citation as string,",
+				"          Abstract as string,",
+				"          {Link to License} as string,",
+				"          Status as string,",
+				"          {Link to PDF} as string,",
+				"          {Link to Extracted Text} as string,",
+				"          {Metadata Last Modified} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> srcKAUST2023",
+				"srcKAUST2023 derive(each(match(type=='string'), $$ = iif(trim($$) == '', toString(null()), trim($$)))) ~> trimAndNull",
+				"trimAndNull derive(pub_date = case(   regexMatch({Publication Date}, `^\\d{4}-\\d{1,2}-\\d{1,2}$`), toDate({Publication Date}, 'yyyy-M-d'),   regexMatch({Publication Date}, `^\\d{4}-\\d{1,2}$`), toDate({Publication Date}, 'yyyy-M'),   regexMatch({Publication Date}, `^\\d{4}$`), toDate({Publication Date}, 'yyyy'),   regexMatch({Publication Date}, `^\\d{4}-\\d{2}-\\d{2}T`), toDate(left({Publication Date}, 10), 'yyyy-MM-dd') )) ~> parseDate",
+				"parseDate filter(year(pub_date) == 2023) ~> keep2023",
+				"keep2023 derive(dedup_key = iif(isNull(DOI), Handle, concat(DOI, '|', Title, '|', coalesce(Type, ''), '|', toString(pub_date))),",
+				"          completeness = iif(isNull(Type),0,1) + iif(isNull(Title),0,1) + iif(isNull(Authors),0,1) + iif(isNull(Journal),0,1) + iif(isNull(Publisher),0,1) + iif(isNull(DOI),0,1) + iif(isNull(Handle),0,1) + iif(isNull(Citation),0,1) + iif(isNull(Abstract),0,1) + iif(isNull({Link to License}),0,1) + iif(isNull(Status),0,1) + iif(isNull({Link to PDF}),0,1) + iif(isNull({Link to Extracted Text}),0,1)) ~> dedupPrep",
+				"dedupPrep window(over(dedup_key),",
+				"     desc(completeness, true),",
+				"     desc({Metadata Last Modified}, true),",
+				"     rn = rowNumber()) ~> rankDuplicates",
+				"rankDuplicates filter(rn == 1) ~> keepFirst",
+				"keepFirst derive(research_id = Handle,",
+				"          university = 'KAUST',",
+				"          publication_year = year(pub_date),",
+				"          publication_date = toString(pub_date, 'yyyy-MM-dd'),",
+				"          research_field = toString(null()),",
+				"          tech_category = toString(null()),",
+				"          url = Handle,",
+				"          source = 'KAUST Repository',",
+				"          doi_clean = lower(DOI)) ~> addFields",
+				"addFields select(mapColumn(",
+				"          research_id,",
+				"          university,",
+				"          title = Title,",
+				"          authors = Authors,",
+				"          publication_year,",
+				"          publication_date,",
+				"          abstract = Abstract,",
+				"          research_field,",
+				"          tech_category,",
+				"          journal = Journal,",
+				"          doi = doi_clean,",
+				"          url,",
+				"          source",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectSchema",
+				"selectSchema cast(output(",
+				"          publication_year as integer,",
+				"          publication_date as date 'yyyy-MM-dd'",
+				"     ),",
+				"     errors: true) ~> castTypes",
+				"castTypes filter(!isNull(doi) && trim(doi) != '' && !isNull(authors) && trim(authors) != '' && !isNull(title) && trim(title) != '' && !isNull(url) && trim(url) != '') ~> validForDb",
+				"castTypes sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'saudi-tech-research',",
+				"     folderPath: 'interim/cleaned/kaust_2023',",
+				"     truncate: true,",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\"',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     partitionFileNames:['KAUST_2023_cleaned.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sinkKAUSTClean",
+				"validForDb sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          research_id as string,",
+				"          university as string,",
+				"          title as string,",
+				"          authors as string,",
+				"          publication_year as integer,",
+				"          publication_date as date,",
+				"          abstract as string,",
+				"          research_field as string,",
+				"          tech_category as string,",
+				"          journal as string,",
+				"          doi as string,",
+				"          url as string,",
+				"          source as string,",
+				"          has_doi as boolean,",
+				"          abstract_word_count as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     batchSize: 1000,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          research_id,",
+				"          university,",
+				"          title,",
+				"          authors,",
+				"          publication_year,",
+				"          publication_date,",
+				"          abstract,",
+				"          research_field,",
+				"          tech_category,",
+				"          journal,",
+				"          doi,",
+				"          url,",
+				"          source",
+				"     )) ~> sinkPostgres"
+			]
+		}
+	}
+}

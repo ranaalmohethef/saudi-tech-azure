@@ -1,0 +1,29 @@
+{
+	"name": "DS_KSU_Clean_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Sink_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"year": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@concat('interim/cleaned/ksu/', dataset().year)",
+					"type": "Expression"
+				},
+				"fileSystem": "saudi-tech-research"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

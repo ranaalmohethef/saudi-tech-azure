@@ -1,0 +1,15 @@
+{
+	"name": "saudi-tech-adf-rana",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "qatarcentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "5dc4cf8e-4174-4a3f-8f6d-7a82cdef31ac",
+		"tenantId": "c8461397-126f-463d-980c-f6497e89fc6b"
+	}
+}

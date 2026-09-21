@@ -1,0 +1,21 @@
+{
+	"name": "DS_KSU_Enrichment",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Sink_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "ksu_manual_enrichment.json",
+				"folderPath": "reference",
+				"fileSystem": "saudi-tech-research"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

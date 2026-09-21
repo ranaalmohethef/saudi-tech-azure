@@ -1,0 +1,182 @@
+{
+	"name": "KAUST_Clean_Pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "KAUST_2023_Clean_DF",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DownloadCsv",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "KAUST_2023_Clean_DF",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "GetBundles",
+				"type": "WebActivity",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": "https://repository.kaust.edu.sa/server/api/core/items/1fca5bb2-aa40-4d1b-8d58-285b9e1623d7/bundles"
+				}
+			},
+			{
+				"name": "GetBitstreams",
+				"type": "WebActivity",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "GetBundles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": {
+						"value": "@concat('https://repository.kaust.edu.sa/server/api/core/bundles/', activity('GetBundles').output._embedded.bundles[0].uuid, '/bitstreams')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "DownloadCsv",
+				"type": "Copy",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "GetBitstreams",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET",
+							"additionalHeaders": "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\nAccept: text/csv,application/octet-stream,*/*",
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_KAUST_Bitstream",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_KAUST_Raw_File_ADLS",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "MergeToFinal",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "KAUST_2023_Clean_DF",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "LS_Postgres",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "INSERT INTO research.publications AS p (research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, has_doi, abstract_word_count) SELECT DISTINCT ON (research_id) research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, COALESCE(has_doi, doi IS NOT NULL), COALESCE(abstract_word_count, 0) FROM research.publications_staging ORDER BY research_id ON CONFLICT (research_id) DO UPDATE SET university = EXCLUDED.university, title = EXCLUDED.title, authors = EXCLUDED.authors, publication_year = EXCLUDED.publication_year, publication_date = EXCLUDED.publication_date, abstract = EXCLUDED.abstract, research_field = EXCLUDED.research_field, tech_category = EXCLUDED.tech_category, journal = EXCLUDED.journal, doi = EXCLUDED.doi, url = EXCLUDED.url, source = EXCLUDED.source, has_doi = EXCLUDED.has_doi, abstract_word_count = EXCLUDED.abstract_word_count, loaded_at = now();"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"policy": {
+			"elapsedTimeMetric": {
+				"duration": "00:20:00"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-09-18T20:00:36Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

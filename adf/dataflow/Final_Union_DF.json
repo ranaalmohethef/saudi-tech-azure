@@ -1,0 +1,205 @@
+{
+	"name": "Final_Union_DF",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_KSU_Clean_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "srcKsu"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_Publications_All",
+						"type": "DatasetReference"
+					},
+					"name": "srcPg"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_KFUPM_Validated_Csv",
+						"type": "DatasetReference"
+					},
+					"name": "srcKfupm"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_OpenAlex_Validated_Csv",
+						"type": "DatasetReference"
+					},
+					"name": "srcOpenAlex"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Final_Dataset",
+						"type": "DatasetReference"
+					},
+					"name": "sinkFinal"
+				}
+			],
+			"transformations": [
+				{
+					"name": "castKfupm"
+				},
+				{
+					"name": "unionAll"
+				},
+				{
+					"name": "recompute"
+				},
+				{
+					"name": "isTech"
+				},
+				{
+					"name": "finalSchema"
+				},
+				{
+					"name": "castOpenAlex"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          research_id as string,",
+				"          university as string,",
+				"          title as string,",
+				"          authors as string,",
+				"          abstract as string,",
+				"          journal as string,",
+				"          author_keywords as string,",
+				"          doi as string,",
+				"          url as string,",
+				"          publication_year as integer,",
+				"          publication_date as date,",
+				"          research_field as string,",
+				"          tech_category as string,",
+				"          source as string,",
+				"          has_doi as boolean,",
+				"          abstract_word_count as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     wildcardPaths:['interim/cleaned/ksu/*/*.parquet']) ~> srcKsu",
+				"source(output(",
+				"          research_id as string,",
+				"          university as string,",
+				"          title as string,",
+				"          authors as string,",
+				"          publication_year as integer,",
+				"          publication_date as date,",
+				"          abstract as string,",
+				"          research_field as string,",
+				"          tech_category as string,",
+				"          journal as string,",
+				"          doi as string,",
+				"          url as string,",
+				"          source as string,",
+				"          has_doi as boolean,",
+				"          abstract_word_count as integer,",
+				"          loaded_at as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> srcPg",
+				"source(output(",
+				"          research_id as string,",
+				"          university as string,",
+				"          title as string,",
+				"          authors as string,",
+				"          publication_year as short,",
+				"          publication_date as date,",
+				"          abstract as string,",
+				"          research_field as string,",
+				"          tech_category as string,",
+				"          journal as string,",
+				"          doi as string,",
+				"          url as string,",
+				"          source as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> srcKfupm",
+				"source(output(",
+				"          research_id as string,",
+				"          university as string,",
+				"          title as string,",
+				"          authors as string,",
+				"          publication_year as short,",
+				"          publication_date as string,",
+				"          abstract as string,",
+				"          research_field as string,",
+				"          tech_category as string,",
+				"          journal as string,",
+				"          doi as string,",
+				"          url as string,",
+				"          source as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     wildcardPaths:['interim/cleaned/openalex/*_validated.csv']) ~> srcOpenAlex",
+				"srcKfupm derive(publication_year = toInteger(publication_year)) ~> castKfupm",
+				"srcPg, srcKsu, srcKfupm, castOpenAlex union(byName: true)~> unionAll",
+				"unionAll derive(has_doi = !isNull(doi) && doi != '',",
+				"          abstract_word_count = iif(isNull(abstract) || trim(abstract) == '', 0, size(split(regexReplace(trim(abstract), `\\s+`, ' '), ' '))),",
+				"          tech_text = concat(trim(regexReplace(regexReplace(regexReplace(regexReplace(lower(coalesce(title, '')), `[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2212_]+`, ' '), `\\s+`, ' '), `(?<!\\w)computer vision syndrome(?!\\w)`, ' '), `\\s+`, ' ')), ' | ', trim(regexReplace(regexReplace(regexReplace(regexReplace(lower(coalesce(iif(university == 'KSU', author_keywords, abstract), '')), `[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2212_]+`, ' '), `\\s+`, ' '), `(?<!\\w)computer vision syndrome(?!\\w)`, ' '), `\\s+`, ' ')))) ~> recompute",
+				"recompute filter(regexMatch(tech_text, `(?<!\\w)(artificial intelligence|machine learning|deep learning|neural network|neural networks|multilayer perceptron|random forest|computer vision|natural language processing|large language model|large language models|generative ai|cybersecurity|cyber security|information security|intrusion detection|cryptography|blockchain|software engineering|internet of things|iot|cloud computing|edge computing|wireless network|wireless networks|robotics|robot|robots|data mining|big data|computer science|ann modeling|ann modelling)(?!\\w)`)) ~> isTech",
+				"isTech select(mapColumn(",
+				"          research_id,",
+				"          university,",
+				"          title,",
+				"          authors,",
+				"          publication_year,",
+				"          publication_date,",
+				"          abstract,",
+				"          research_field,",
+				"          tech_category,",
+				"          journal,",
+				"          doi,",
+				"          url,",
+				"          source,",
+				"          has_doi,",
+				"          abstract_word_count",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> finalSchema",
+				"srcOpenAlex derive(publication_year = toInteger(publication_year),",
+				"          publication_date = toDate(null())) ~> castOpenAlex",
+				"finalSchema sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          research_id as string,",
+				"          university as string,",
+				"          title as string,",
+				"          authors as string,",
+				"          publication_year as integer,",
+				"          publication_date as date,",
+				"          abstract as string,",
+				"          research_field as string,",
+				"          tech_category as string,",
+				"          journal as string,",
+				"          doi as string,",
+				"          url as string,",
+				"          source as string,",
+				"          has_doi as boolean,",
+				"          abstract_word_count as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkFinal"
+			]
+		}
+	}
+}

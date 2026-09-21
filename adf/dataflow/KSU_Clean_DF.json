@@ -1,0 +1,152 @@
+{
+	"name": "KSU_Clean_DF",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_KSU_Json",
+						"type": "DatasetReference"
+					},
+					"name": "srcKSU"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_KSU_Enrichment",
+						"type": "DatasetReference"
+					},
+					"name": "srcEnrichment"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_KSU_Clean_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "sinkKsuClean"
+				}
+			],
+			"transformations": [
+				{
+					"name": "addRowIndex"
+				},
+				{
+					"name": "cleanFields"
+				},
+				{
+					"name": "renameEnrichment"
+				},
+				{
+					"name": "joinEnrichment"
+				},
+				{
+					"name": "applyEnrichment"
+				},
+				{
+					"name": "selectSchema"
+				},
+				{
+					"name": "validForDb"
+				},
+				{
+					"name": "addMetrics"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     year as integer (2023)",
+				"}",
+				"source(output(",
+				"          Authors as string,",
+				"          {Article Title} as string,",
+				"          {Source Title} as string,",
+				"          {Document Type} as string,",
+				"          {Author Keywords} as string,",
+				"          Abstract as string,",
+				"          Affiliations as string,",
+				"          DOI as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'arrayOfDocuments',",
+				"     backslashEscape: true) ~> srcKSU",
+				"source(output(",
+				"          abstract as string,",
+				"          abstract_source as string,",
+				"          doi as string,",
+				"          doi_source as string,",
+				"          evidence as string,",
+				"          research_id as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'arrayOfDocuments') ~> srcEnrichment",
+				"srcKSU keyGenerate(output(row_idx as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> addRowIndex",
+				"addRowIndex derive(research_id = concat('KSU_', toString($year), '_', toString(row_idx - 1)),",
+				"          university = 'KSU',",
+				"          title_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim({Article Title}))), toString(null()), trim({Article Title})),",
+				"          authors_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim(Authors))), toString(null()), trim(Authors)),",
+				"          abstract_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim(Abstract))), toString(null()), trim(Abstract)),",
+				"          journal_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim({Source Title}))), toString(null()), trim({Source Title})),",
+				"          author_keywords = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim({Author Keywords}))), toString(null()), trim({Author Keywords})),",
+				"          doi_clean = iif(isNull(DOI), toString(null()), lower(regexReplace(regexExtract(regexReplace(trim(DOI), `(?i)^(https?://(dx\\.)?doi\\.org/|doi:\\s*)`, ''), `(?i)(10\\.\\d{4,9}/\\S+)`, 1), `\\.+$`, ''))),",
+				"          url_clean = concat('https://data.ksu.edu.sa/sites/data.ksu.edu.sa/files/users/user976/KSU-DMO-OD-DATASET-SciResarch-Publications-', toString($year), '.json'),",
+				"          publication_year = $year,",
+				"          publication_date = toDate(null()),",
+				"          research_field = toString(null()),",
+				"          tech_category = toString(null()),",
+				"          source = 'KSU') ~> cleanFields",
+				"srcEnrichment select(mapColumn(",
+				"          enr_abstract = abstract,",
+				"          enr_doi = doi,",
+				"          enr_id = research_id",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renameEnrichment",
+				"cleanFields, renameEnrichment join(research_id == enr_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'right')~> joinEnrichment",
+				"joinEnrichment derive(doi_clean = iif(isNull(doi_clean) || doi_clean == '', lower(trim(enr_doi)), doi_clean),",
+				"          abstract_clean = iif(isNull(abstract_clean), enr_abstract, abstract_clean)) ~> applyEnrichment",
+				"applyEnrichment select(mapColumn(",
+				"          research_id,",
+				"          university,",
+				"          title = title_clean,",
+				"          authors = authors_clean,",
+				"          abstract = abstract_clean,",
+				"          journal = journal_clean,",
+				"          author_keywords,",
+				"          doi = doi_clean,",
+				"          url = url_clean,",
+				"          publication_year,",
+				"          publication_date,",
+				"          research_field,",
+				"          tech_category,",
+				"          source",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectSchema",
+				"selectSchema filter(!isNull(doi) && doi != '' && regexMatch(doi, `^10\\.\\d{4,9}/\\S+$`) && !isNull(title) && !isNull(authors)) ~> validForDb",
+				"validForDb derive(has_doi = !isNull(doi) && doi != '',",
+				"          abstract_word_count = iif(isNull(abstract) || abstract == '', 0, size(split(abstract, ' ')))) ~> addMetrics",
+				"addMetrics sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     truncate: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkKsuClean"
+			]
+		}
+	}
+}

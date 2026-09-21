@@ -1,0 +1,22 @@
+{
+	"name": "DS_Crossref_Json_Write",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Sink_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "crossref_lines.json",
+				"folderPath": "Raw/kaust/crossref",
+				"fileSystem": "saudi-tech-research"
+			},
+			"encodingName": "UTF-8 without BOM"
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,30 @@
+{
+	"name": "DS_OpenAlex_Json_Write",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Sink_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ror": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat('openalex_', dataset().ror, '.json')",
+					"type": "Expression"
+				},
+				"folderPath": "Raw/openalex",
+				"fileSystem": "saudi-tech-research"
+			},
+			"encodingName": "UTF-8 without BOM"
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

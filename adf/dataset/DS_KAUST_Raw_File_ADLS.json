@@ -1,0 +1,20 @@
+{
+	"name": "DS_KAUST_Raw_File_ADLS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Sink_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "kaust_api_latest.csv",
+				"folderPath": "Raw/kaust/api_download",
+				"fileSystem": "saudi-tech-research"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

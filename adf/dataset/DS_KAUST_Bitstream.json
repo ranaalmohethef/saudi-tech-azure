@@ -1,0 +1,17 @@
+{
+	"name": "DS_KAUST_Bitstream",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_KAUST_Repository",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

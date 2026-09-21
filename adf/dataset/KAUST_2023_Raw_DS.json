@@ -1,0 +1,86 @@
+{
+	"name": "KAUST_2023_Raw_DS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Source_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "KAUST_2023_raw.csv",
+				"folderPath": "Raw/kaust",
+				"fileSystem": "saudi-tech-research"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\"",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Type",
+				"type": "String"
+			},
+			{
+				"name": "Title",
+				"type": "String"
+			},
+			{
+				"name": "Authors",
+				"type": "String"
+			},
+			{
+				"name": "Journal",
+				"type": "String"
+			},
+			{
+				"name": "Publisher",
+				"type": "String"
+			},
+			{
+				"name": "DOI",
+				"type": "String"
+			},
+			{
+				"name": "Handle",
+				"type": "String"
+			},
+			{
+				"name": "Publication Date",
+				"type": "String"
+			},
+			{
+				"name": "Citation",
+				"type": "String"
+			},
+			{
+				"name": "Abstract",
+				"type": "String"
+			},
+			{
+				"name": "Link to License",
+				"type": "String"
+			},
+			{
+				"name": "Status",
+				"type": "String"
+			},
+			{
+				"name": "Link to PDF",
+				"type": "String"
+			},
+			{
+				"name": "Link to Extracted Text",
+				"type": "String"
+			},
+			{
+				"name": "Metadata Last Modified",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

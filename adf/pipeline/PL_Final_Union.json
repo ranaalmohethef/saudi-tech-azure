@@ -1,0 +1,39 @@
+{
+	"name": "PL_Final_Union",
+	"properties": {
+		"activities": [
+			{
+				"name": "RunFinalUnion",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Final_Union_DF",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"srcKsu": {
+								"year": "2023"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-09-19T20:46:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

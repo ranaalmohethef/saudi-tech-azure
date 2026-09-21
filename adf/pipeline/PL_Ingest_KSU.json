@@ -1,0 +1,130 @@
+{
+	"name": "PL_Ingest_KSU",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachYear",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.year",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "CopyKsuYear",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "BinarySource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "BinaryReadSettings"
+									}
+								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_KSU_Http",
+									"type": "DatasetReference",
+									"parameters": {
+										"year": "@string(item())"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_KSU_Raw_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"year": "@string(item())"
+									}
+								}
+							]
+						},
+						{
+							"name": "RunKsuClean",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [
+								{
+									"activity": "CopyKsuYear",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "KSU_Clean_DF",
+									"type": "DataFlowReference",
+									"parameters": {
+										"year": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"srcKSU": {
+											"year": "@string(item())"
+										},
+										"sinkKsuClean": {
+											"year": "@string(item())"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"year": {
+				"type": "array",
+				"defaultValue": [
+					2023,
+					2024,
+					2025
+				]
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-09-19T20:46:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

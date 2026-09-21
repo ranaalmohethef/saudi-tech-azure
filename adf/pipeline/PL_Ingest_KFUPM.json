@@ -1,0 +1,86 @@
+{
+	"name": "PL_Ingest_KFUPM",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachYear",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.year",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "RunYearHarvest",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_Harvest_KFUPM_Year",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"year": {
+										"value": "@string(item())",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "ProcessKfupm",
+				"type": "AzureFunctionActivity",
+				"dependsOn": [
+					{
+						"activity": "ForEachYear",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"functionName": "process/kfupm",
+					"method": "POST"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_Func_Process",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"year": {
+				"type": "array",
+				"defaultValue": [
+					2024,
+					2025,
+					2026
+				]
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-09-21T07:26:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

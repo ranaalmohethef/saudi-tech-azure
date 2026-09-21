@@ -1,0 +1,28 @@
+{
+	"name": "DS_KSU_Raw_ADLS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_Sink_saudi",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"year": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat('ksu_publications_', dataset().year, '.json')",
+					"type": "Expression"
+				},
+				"folderPath": "Raw/ksu",
+				"fileSystem": "saudi-tech-research"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
