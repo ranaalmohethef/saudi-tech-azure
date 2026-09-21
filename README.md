@@ -20,7 +20,7 @@ PostgreSQL.
 
 ```
 adf/                    Azure Data Factory, synced through Git integration
-  pipeline/             9 pipelines (PL_Master and its children)
+  pipeline/             8 pipelines (PL_Master and its children)
   dataflow/             4 mapping data flows
   dataset/              21 datasets
   linkedService/        9 linked services (credentials are encrypted, not stored here)
