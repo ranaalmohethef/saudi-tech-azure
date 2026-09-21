@@ -1198,7 +1198,14 @@
 					{
 						"name": "RunKaust",
 						"type": "ExecutePipeline",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "GetEmailUrl",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"secureInput": false
 						},
@@ -1427,7 +1434,7 @@
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
 							"secureOutput": false,
-							"secureInput": false
+							"secureInput": true
 						},
 						"userProperties": [],
 						"typeProperties": {
@@ -1435,7 +1442,10 @@
 							"headers": {
 								"Content-Type": "application/json"
 							},
-							"url": "https://prod-75.eastus.logic.azure.com:443/workflows/b40c3d3d6eb2491fa8768a8ba9bdf93b/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=Fhrx9kmH_YbgVIwIuyW4OCIn5QyKiULQJOP5EuDyun0",
+							"url": {
+								"value": "@activity('GetEmailUrl').output.value",
+								"type": "Expression"
+							},
 							"body": {
 								"status": "Succeeded",
 								"pipeline": "@{pipeline().Pipeline}",
@@ -1461,7 +1471,7 @@
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
 							"secureOutput": false,
-							"secureInput": false
+							"secureInput": true
 						},
 						"userProperties": [],
 						"typeProperties": {
@@ -1469,7 +1479,10 @@
 							"headers": {
 								"Content-Type": "application/json"
 							},
-							"url": "https://prod-75.eastus.logic.azure.com:443/workflows/b40c3d3d6eb2491fa8768a8ba9bdf93b/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=Fhrx9kmH_YbgVIwIuyW4OCIn5QyKiULQJOP5EuDyun0",
+							"url": {
+								"value": "@activity('GetEmailUrl').output.value",
+								"type": "Expression"
+							},
 							"body": {
 								"status": "Failed",
 								"pipeline": "@{pipeline().Pipeline}",
@@ -1493,6 +1506,28 @@
 						"typeProperties": {
 							"message": "PL_Master failed",
 							"errorCode": "500"
+						}
+					},
+					{
+						"name": "GetEmailUrl",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": true,
+							"secureInput": true
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": "https://kv-saudi-tech-rana.vault.azure.net/secrets/logicapp-url?api-version=7.4",
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://vault.azure.net"
+							}
 						}
 					}
 				],
