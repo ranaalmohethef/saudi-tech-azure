@@ -1,0 +1,54 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "saudi-tech-adf-rana"
+		},
+		"ADLS_Sink_saudi_accountKey": {
+			"value": ""
+		},
+		"ADLS_Source_saudi_accountKey": {
+			"value": ""
+		},
+		"LS_Func_Process_functionKey": {
+			"value": ""
+		},
+		"LS_Postgres_password": {
+			"value": ""
+		},
+		"ADLS_Sink_saudi_properties_typeProperties_url": {
+			"value": "https://storageacc4saudi.dfs.core.windows.net/"
+		},
+		"ADLS_Source_saudi_properties_typeProperties_url": {
+			"value": "https://storageacc4saudi.dfs.core.windows.net/"
+		},
+		"LS_Crossref_API_properties_typeProperties_url": {
+			"value": "https://api.crossref.org"
+		},
+		"LS_Func_Process_properties_typeProperties_functionAppUrl": {
+			"value": "https://saudi-tech-func-rana.azurewebsites.net"
+		},
+		"LS_KAUST_Repository_properties_typeProperties_url": {
+			"value": "https://repository.kaust.edu.sa/server/api/"
+		},
+		"LS_KFUPM_Pure_properties_typeProperties_url": {
+			"value": "https://pure.kfupm.edu.sa/ws/"
+		},
+		"LS_KSU_Data_properties_typeProperties_url": {
+			"value": "https://data.ksu.edu.sa/"
+		},
+		"LS_OpenAlex_API_properties_typeProperties_url": {
+			"value": "https://api.openalex.org/"
+		},
+		"LS_Postgres_properties_typeProperties_server": {
+			"value": "saudi-tech-pg.postgres.database.azure.com"
+		},
+		"LS_Postgres_properties_typeProperties_database": {
+			"value": "research_hub"
+		},
+		"LS_Postgres_properties_typeProperties_username": {
+			"value": "sqladminuse"
+		}
+	}
+}

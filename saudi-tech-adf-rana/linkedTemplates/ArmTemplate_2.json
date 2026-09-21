@@ -1,0 +1,386 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "saudi-tech-adf-rana"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Ingest_KSU')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachYear",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.year",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CopyKsuYear",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "BinarySource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET"
+											},
+											"formatSettings": {
+												"type": "BinaryReadSettings"
+											}
+										},
+										"sink": {
+											"type": "BinarySink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_KSU_Http",
+											"type": "DatasetReference",
+											"parameters": {
+												"year": "@string(item())"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_KSU_Raw_ADLS",
+											"type": "DatasetReference",
+											"parameters": {
+												"year": "@string(item())"
+											}
+										}
+									]
+								},
+								{
+									"name": "RunKsuClean",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "CopyKsuYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "KSU_Clean_DF",
+											"type": "DataFlowReference",
+											"parameters": {
+												"year": {
+													"value": "@item()",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"srcKSU": {
+													"year": "@string(item())"
+												},
+												"srcEnrichment": {},
+												"sinkKsuClean": {
+													"year": "@string(item())"
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"year": {
+						"type": "array",
+						"defaultValue": [
+							2023,
+							2024,
+							2025
+						]
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-19T20:46:21Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "RunKaust",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "KAUST_Clean_Pipeline",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "RunCrossref",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "RunKaust",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Ingest_Crossref",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "RunKsu",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "RunCrossref",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Ingest_KSU",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"year": {
+									"value": "@createArray(2023,2024,2025)",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "RunKfupm",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "RunKsu",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Ingest_KFUPM",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"year": {
+									"value": "@createArray(2023,2024,2025,2026)",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "RunFinal",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "RunOpenAlex",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Final_Union",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "RunOpenAlex",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "RunKfupm",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Ingest_OpenAlex",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"rors": {
+									"value": "@createArray('02ma4wv74','052kwzs30','04jt46d36')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "QualityCheck",
+						"type": "AzureFunctionActivity",
+						"dependsOn": [
+							{
+								"activity": "RunFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"functionName": "quality_check",
+							"body": {
+								"caller": "adf"
+							},
+							"headers": {},
+							"method": "POST"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_Func_Process",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "UpdateStats",
+						"type": "AzureFunctionActivity",
+						"dependsOn": [
+							{
+								"activity": "QualityCheck",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"functionName": "update_stats",
+							"body": {
+								"caller": "adf"
+							},
+							"headers": {},
+							"method": "POST"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_Func_Process",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-20T14:14:51Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_Ingest_KSU')]"
+			]
+		}
+	]
+}

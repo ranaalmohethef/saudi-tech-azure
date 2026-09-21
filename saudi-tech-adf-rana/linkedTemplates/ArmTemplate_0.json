@@ -1,0 +1,697 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "saudi-tech-adf-rana"
+		},
+		"ADLS_Sink_saudi_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLS_Sink_saudi'"
+		},
+		"ADLS_Source_saudi_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLS_Source_saudi'"
+		},
+		"LS_Func_Process_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'LS_Func_Process'"
+		},
+		"LS_Postgres_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Postgres'"
+		},
+		"ADLS_Sink_saudi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://storageacc4saudi.dfs.core.windows.net/"
+		},
+		"ADLS_Source_saudi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://storageacc4saudi.dfs.core.windows.net/"
+		},
+		"LS_Crossref_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.crossref.org"
+		},
+		"LS_Func_Process_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://saudi-tech-func-rana.azurewebsites.net"
+		},
+		"LS_KAUST_Repository_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://repository.kaust.edu.sa/server/api/"
+		},
+		"LS_KFUPM_Pure_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://pure.kfupm.edu.sa/ws/"
+		},
+		"LS_KSU_Data_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.ksu.edu.sa/"
+		},
+		"LS_OpenAlex_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.openalex.org/"
+		},
+		"LS_Postgres_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "saudi-tech-pg.postgres.database.azure.com"
+		},
+		"LS_Postgres_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "research_hub"
+		},
+		"LS_Postgres_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "sqladminuse"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_Sink_saudi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ADLS_Sink_saudi_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ADLS_Sink_saudi_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_Source_saudi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ADLS_Source_saudi_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ADLS_Source_saudi_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Crossref_API')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('LS_Crossref_API_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Func_Process')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureFunction",
+				"typeProperties": {
+					"functionAppUrl": "[parameters('LS_Func_Process_properties_typeProperties_functionAppUrl')]",
+					"authentication": "Anonymous",
+					"functionKey": {
+						"type": "SecureString",
+						"value": "[parameters('LS_Func_Process_functionKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_KAUST_Repository')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('LS_KAUST_Repository_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_KFUPM_Pure')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('LS_KFUPM_Pure_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_KSU_Data')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('LS_KSU_Data_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_OpenAlex_API')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('LS_OpenAlex_API_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Postgres')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzurePostgreSql",
+				"version": "2.0",
+				"typeProperties": {
+					"server": "[parameters('LS_Postgres_properties_typeProperties_server')]",
+					"port": "5432",
+					"database": "[parameters('LS_Postgres_properties_typeProperties_database')]",
+					"sslMode": 2,
+					"username": "[parameters('LS_Postgres_properties_typeProperties_username')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_Postgres_password')]"
+					},
+					"authenticationType": "Basic"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Crossref_Json')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "crossref_lines.json",
+						"folderPath": "Raw/kaust/crossref",
+						"fileSystem": "saudi-tech-research"
+					},
+					"encodingName": "UTF-8"
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_Sink_saudi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Crossref_Json_Write')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "crossref_lines.json",
+						"folderPath": "Raw/kaust/crossref",
+						"fileSystem": "saudi-tech-research"
+					},
+					"encodingName": "UTF-8 without BOM"
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_Sink_saudi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Crossref_Rest')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Crossref_API",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": "works?filter=ror-id:01q3tbs38,from-pub-date:2024-01-01,until-pub-date:2026-12-31&rows=100&cursor=*&mailto=ranaa.almohethef@gmail.com"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Crossref_API')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Final_Dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Postgres",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzurePostgreSqlTable",
+				"schema": [
+					{
+						"name": "research_id",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "university",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "title",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "authors",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_year",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_date",
+						"type": "date",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "research_field",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "tech_category",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "journal",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "doi",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "url",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "has_doi",
+						"type": "boolean",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract_word_count",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "research",
+					"table": "final_dataset"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Postgres')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Final_Dataset_Candidate')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Postgres",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzurePostgreSqlTable",
+				"schema": [
+					{
+						"name": "research_id",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "university",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "title",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "authors",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_year",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_date",
+						"type": "date",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "research_field",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "tech_category",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "journal",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "doi",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "url",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "has_doi",
+						"type": "boolean",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract_word_count",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "loaded_at",
+						"type": "timestamp with time zone",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "research",
+					"table": "final_dataset_candidate"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Postgres')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KAUST_Bitstream')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_KAUST_Repository",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KAUST_Repository')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KAUST_Raw_File_ADLS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "kaust_api_latest.csv",
+						"folderPath": "Raw/kaust/api_download",
+						"fileSystem": "saudi-tech-research"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_Sink_saudi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KFUPM_Http')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_KFUPM_Pure",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"relUrl": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@dataset().relUrl",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KFUPM_Pure')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KFUPM_Raw_ADLS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "Raw/kfupm",
+						"fileSystem": "saudi-tech-research"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_Sink_saudi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KFUPM_Validated_Csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "KFUPM_validated.csv",
+						"folderPath": "interim/cleaned/kfupm",
+						"fileSystem": "saudi-tech-research"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\"",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_Sink_saudi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KSU_Clean_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@concat('interim/cleaned/ksu/', dataset().year)",
+							"type": "Expression"
+						},
+						"fileSystem": "saudi-tech-research"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_Sink_saudi')]"
+			]
+		}
+	]
+}

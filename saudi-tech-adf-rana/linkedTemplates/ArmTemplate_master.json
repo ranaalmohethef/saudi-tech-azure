@@ -1,0 +1,187 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "saudi-tech-adf-rana"
+		},
+		"ADLS_Sink_saudi_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLS_Sink_saudi'"
+		},
+		"ADLS_Source_saudi_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLS_Source_saudi'"
+		},
+		"LS_Func_Process_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'LS_Func_Process'"
+		},
+		"LS_Postgres_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Postgres'"
+		},
+		"ADLS_Sink_saudi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://storageacc4saudi.dfs.core.windows.net/"
+		},
+		"ADLS_Source_saudi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://storageacc4saudi.dfs.core.windows.net/"
+		},
+		"LS_Crossref_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.crossref.org"
+		},
+		"LS_Func_Process_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://saudi-tech-func-rana.azurewebsites.net"
+		},
+		"LS_KAUST_Repository_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://repository.kaust.edu.sa/server/api/"
+		},
+		"LS_KFUPM_Pure_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://pure.kfupm.edu.sa/ws/"
+		},
+		"LS_KSU_Data_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.ksu.edu.sa/"
+		},
+		"LS_OpenAlex_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.openalex.org/"
+		},
+		"LS_Postgres_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "saudi-tech-pg.postgres.database.azure.com"
+		},
+		"LS_Postgres_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "research_hub"
+		},
+		"LS_Postgres_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "sqladminuse"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "saudi-tech-adf-rana_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ADLS_Sink_saudi_accountKey": {
+						"value": "[parameters('ADLS_Sink_saudi_accountKey')]"
+					},
+					"ADLS_Source_saudi_accountKey": {
+						"value": "[parameters('ADLS_Source_saudi_accountKey')]"
+					},
+					"LS_Func_Process_functionKey": {
+						"value": "[parameters('LS_Func_Process_functionKey')]"
+					},
+					"LS_Postgres_password": {
+						"value": "[parameters('LS_Postgres_password')]"
+					},
+					"ADLS_Sink_saudi_properties_typeProperties_url": {
+						"value": "[parameters('ADLS_Sink_saudi_properties_typeProperties_url')]"
+					},
+					"ADLS_Source_saudi_properties_typeProperties_url": {
+						"value": "[parameters('ADLS_Source_saudi_properties_typeProperties_url')]"
+					},
+					"LS_Crossref_API_properties_typeProperties_url": {
+						"value": "[parameters('LS_Crossref_API_properties_typeProperties_url')]"
+					},
+					"LS_Func_Process_properties_typeProperties_functionAppUrl": {
+						"value": "[parameters('LS_Func_Process_properties_typeProperties_functionAppUrl')]"
+					},
+					"LS_KAUST_Repository_properties_typeProperties_url": {
+						"value": "[parameters('LS_KAUST_Repository_properties_typeProperties_url')]"
+					},
+					"LS_KFUPM_Pure_properties_typeProperties_url": {
+						"value": "[parameters('LS_KFUPM_Pure_properties_typeProperties_url')]"
+					},
+					"LS_KSU_Data_properties_typeProperties_url": {
+						"value": "[parameters('LS_KSU_Data_properties_typeProperties_url')]"
+					},
+					"LS_OpenAlex_API_properties_typeProperties_url": {
+						"value": "[parameters('LS_OpenAlex_API_properties_typeProperties_url')]"
+					},
+					"LS_Postgres_properties_typeProperties_server": {
+						"value": "[parameters('LS_Postgres_properties_typeProperties_server')]"
+					},
+					"LS_Postgres_properties_typeProperties_database": {
+						"value": "[parameters('LS_Postgres_properties_typeProperties_database')]"
+					},
+					"LS_Postgres_properties_typeProperties_username": {
+						"value": "[parameters('LS_Postgres_properties_typeProperties_username')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "saudi-tech-adf-rana_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'saudi-tech-adf-rana_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "saudi-tech-adf-rana_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'saudi-tech-adf-rana_ArmTemplate_1')]"
+			]
+		}
+	]
+}

@@ -1,0 +1,2235 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "saudi-tech-adf-rana"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KSU_Enrichment')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "ksu_manual_enrichment.json",
+						"folderPath": "reference",
+						"fileSystem": "saudi-tech-research"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KSU_Http')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_KSU_Data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@concat('sites/data.ksu.edu.sa/files/users/user976/KSU-DMO-OD-DATASET-SciResarch-Publications-', dataset().year, '.json')",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KSU_Json')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat('ksu_publications_', dataset().year, '.json')",
+							"type": "Expression"
+						},
+						"folderPath": "Raw/ksu",
+						"fileSystem": "saudi-tech-research"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"Authors": {
+							"type": "string"
+						},
+						"Article Title": {
+							"type": "string"
+						},
+						"Source Title": {
+							"type": "string"
+						},
+						"Document Type": {
+							"type": "string"
+						},
+						"Author Keywords": {
+							"type": "string"
+						},
+						"Abstract": {
+							"type": "string"
+						},
+						"Affiliations": {
+							"type": "string"
+						},
+						"DOI": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_KSU_Raw_ADLS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat('ksu_publications_', dataset().year, '.json')",
+							"type": "Expression"
+						},
+						"folderPath": "Raw/ksu",
+						"fileSystem": "saudi-tech-research"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_OpenAlex_Json_Write')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ror": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat('openalex_', dataset().ror, '.json')",
+							"type": "Expression"
+						},
+						"folderPath": "Raw/openalex",
+						"fileSystem": "saudi-tech-research"
+					},
+					"encodingName": "UTF-8 without BOM"
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_OpenAlex_Rest')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_OpenAlex_API",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ror": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": {
+						"value": "@concat('works?filter=institutions.ror:', dataset().ror, ',from_publication_date:2023-01-01,to_publication_date:2026-12-31,has_doi:true,primary_topic.field.id:fields/17&per-page=200&cursor=*&mailto=al3alee@gmail.com')",
+						"type": "Expression"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_OpenAlex_Validated_Csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Sink_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "interim/cleaned/openalex",
+						"fileSystem": "saudi-tech-research"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\"",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Publications_All')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Postgres",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzurePostgreSqlTable",
+				"schema": [
+					{
+						"name": "research_id",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "university",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "title",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "authors",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_year",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_date",
+						"type": "date",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "research_field",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "tech_category",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "journal",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "doi",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "url",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "has_doi",
+						"type": "boolean",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract_word_count",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "research",
+					"table": "publications"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Publications_Staging')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Postgres",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzurePostgreSqlTable",
+				"schema": [
+					{
+						"name": "research_id",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "university",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "title",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "authors",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_year",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "publication_date",
+						"type": "date",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "research_field",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "tech_category",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "journal",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "doi",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "url",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "has_doi",
+						"type": "boolean",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "abstract_word_count",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "research",
+					"table": "publications_staging"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KAUST_2023_Raw_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_Source_saudi",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "KAUST_2023_raw.csv",
+						"folderPath": "Raw/kaust",
+						"fileSystem": "saudi-tech-research"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\"",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Type",
+						"type": "String"
+					},
+					{
+						"name": "Title",
+						"type": "String"
+					},
+					{
+						"name": "Authors",
+						"type": "String"
+					},
+					{
+						"name": "Journal",
+						"type": "String"
+					},
+					{
+						"name": "Publisher",
+						"type": "String"
+					},
+					{
+						"name": "DOI",
+						"type": "String"
+					},
+					{
+						"name": "Handle",
+						"type": "String"
+					},
+					{
+						"name": "Publication Date",
+						"type": "String"
+					},
+					{
+						"name": "Citation",
+						"type": "String"
+					},
+					{
+						"name": "Abstract",
+						"type": "String"
+					},
+					{
+						"name": "Link to License",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					},
+					{
+						"name": "Link to PDF",
+						"type": "String"
+					},
+					{
+						"name": "Link to Extracted Text",
+						"type": "String"
+					},
+					{
+						"name": "Metadata Last Modified",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Harvest_KFUPM_Year')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SetFirstUrl",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "relUrl",
+							"value": {
+								"value": "@concat('oai?verb=ListRecords&metadataPrefix=mods&set=publications:year', pipeline().parameters.year)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "UntilNoToken",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetFirstUrl",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(string(variables('done')), 'true')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "GetPage",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 3,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"method": "GET",
+										"headers": {},
+										"url": {
+											"value": "@concat('https://pure.kfupm.edu.sa/ws/', variables('relUrl'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SavePage",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "GetPage",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 3,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "BinarySource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET"
+											},
+											"formatSettings": {
+												"type": "BinaryReadSettings"
+											}
+										},
+										"sink": {
+											"type": "BinarySink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_KFUPM_Http",
+											"type": "DatasetReference",
+											"parameters": {
+												"relUrl": "@variables('relUrl')"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_KFUPM_Raw_ADLS",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@concat('year', pipeline().parameters.year, '_page', substring(concat('0000', variables('page')), length(variables('page')), 4), '.xml')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "SetToken",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SavePage",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "token",
+										"value": {
+											"value": "@string(xpath(xml(activity('GetPage').output.Response), 'string(//*[local-name()=\"resumptionToken\"])'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "IfMore",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "SetToken",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(empty(trim(variables('token'))))",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "SetDone",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "done",
+													"value": "true"
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "SetNextUrl",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "relUrl",
+													"value": {
+														"value": "@concat('oai?verb=ListRecords&resumptionToken=', encodeUriComponent(variables('token')))",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "CalcPage",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "tmp",
+													"value": {
+														"value": "@string(add(int(variables('page')), 1))",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "SetPage",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "CalcPage",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "page",
+													"value": {
+														"value": "@variables('tmp')",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"year": {
+						"type": "string",
+						"defaultValue": "2023"
+					}
+				},
+				"variables": {
+					"relUrl": {
+						"type": "String"
+					},
+					"token": {
+						"type": "String"
+					},
+					"page": {
+						"type": "String",
+						"defaultValue": "0"
+					},
+					"tmp": {
+						"type": "String",
+						"defaultValue": "0"
+					},
+					"done": {
+						"type": "String",
+						"defaultValue": "false"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-19T20:46:24Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Ingest_OpenAlex')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachUniversity",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.rors",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CopyOpenAlex",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "RestSource",
+											"httpRequestTimeout": "00:01:40",
+											"requestInterval": "00.00:00:00.010",
+											"requestMethod": "GET",
+											"paginationRules": {
+												"QueryParameters.cursor": "$.meta.next_cursor",
+												"EndCondition:$.results": "Empty"
+											}
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings",
+												"filePattern": "arrayOfObjects"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_OpenAlex_Rest",
+											"type": "DatasetReference",
+											"parameters": {
+												"ror": {
+													"value": "@item()",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_OpenAlex_Json_Write",
+											"type": "DatasetReference",
+											"parameters": {
+												"ror": {
+													"value": "@item()",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "ProcessOpenAlex",
+						"type": "AzureFunctionActivity",
+						"dependsOn": [
+							{
+								"activity": "ForEachUniversity",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"functionName": "process/openalex",
+							"body": {
+								"caller": "adf"
+							},
+							"headers": {},
+							"method": "POST"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_Func_Process",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"rors": {
+						"type": "array",
+						"defaultValue": [
+							"02ma4wv74",
+							"052kwzs30",
+							"04jt46d36"
+						]
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-21T06:58:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_OpenAlex_Rest')]",
+				"[concat(variables('factoryId'), '/datasets/DS_OpenAlex_Json_Write')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Crossref_Clean_DF')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_Crossref_Json",
+								"type": "DatasetReference"
+							},
+							"name": "srcCrossref"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_Publications_Staging",
+								"type": "DatasetReference"
+							},
+							"name": "sinkPostgres"
+						}
+					],
+					"transformations": [
+						{
+							"name": "flattenItems"
+						},
+						{
+							"name": "readFields"
+						},
+						{
+							"name": "selectSchema"
+						},
+						{
+							"name": "validForDb"
+						},
+						{
+							"name": "addMetrics"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          message as (items as (DOI as string, ISBN as long[], ISSN as string[], URL as string, abstract as string, accepted as ({date-parts} as short[][]), {alternative-id} as string[], archive as string[], {article-number} as string, assertion as (URL as string, explanation as (URL as string), group as (label as string, name as string), label as string, name as string, order as short, value as string)[], author as (ORCID as string, affiliation as (department as string[], id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string, place as string[])[], {authenticated-orcid} as boolean, family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string, suffix as string)[], chair as (affiliation as (id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string)[], family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string)[], {container-title} as string[], {content-domain} as ({crossmark-restriction} as boolean, domain as string[]), contributor as (affiliation as string[], family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string)[], created as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long), deposited as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long), description as string, {edition-number} as boolean, editor as (affiliation as string[], family as string, given as string, role as (role as string, vocabulary as string)[], sequence as string)[], funder as (DOI as string, award as string[], {award-info} as ({award-number} as string[], id as ({asserted-by} as string, id as string, {id-type} as string)[])[], {doi-asserted-by} as string, id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string)[], {group-title} as string, indexed as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long, version as string), institution as (id as ({asserted-by} as string, id as string, {id-type} as string)[], name as string)[], {is-referenced-by-count} as short, {isbn-type} as (type as string, value as long)[], {issn-type} as (type as string, value as string)[], issue as short, issued as ({date-parts} as short[][]), {journal-issue} as (issue as short, {published-online} as ({date-parts} as short[][]), {published-print} as ({date-parts} as short[][])), language as string, license as (URL as string, {content-version} as string, {delay-in-days} as short, start as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long))[], link as (URL as string, {content-type} as string, {content-version} as string, {intended-application} as string)[], member as integer, page as string, posted as ({date-parts} as short[][]), prefix as double, published as ({date-parts} as short[][]), {published-online} as ({date-parts} as short[][]), {published-print} as ({date-parts} as short[][]), publisher as string, reference as (DOI as string, ISSN as string, {article-title} as string, author as string, {doi-asserted-by} as string, edition as string, {first-page} as string, {issn-type} as string, issue as string, {journal-title} as string, key as string, type as string, unstructured as string, volume as string, {volume-title} as string, year as string)[], {reference-count} as short, {references-count} as short, relation as ({has-preprint} as ({asserted-by} as string, id as string, {id-type} as string)[], {has-review} as ({asserted-by} as string, id as string, {id-type} as string)[], {has-version} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-based-on} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-financed-by} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-part-of} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-preprint-of} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-review-of} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-same-as} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-supplement-to} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-supplemented-by} as ({asserted-by} as string, id as string, {id-type} as string)[], {is-version-of} as ({asserted-by} as string, id as string, {id-type} as string)[], references as ({asserted-by} as string, id as string, {id-type} as string)[]), resource as (primary as (URL as string)), review as (stage as string, type as string), score as double, {short-container-title} as string[], source as string, subtype as string, title as string[], type as string, {update-policy} as string, {updated-by} as (DOI as string, label as string, source as string, type as string, updated as ({date-parts} as short[][], {date-time} as timestamp, timestamp as long))[], version as (language as string, version as short), volume as string)[], {items-per-page} as short, {next-cursor} as string, query as ({search-terms} as string, {start-index} as boolean), {total-results} as short),",
+						"          {message-type} as string,",
+						"          {message-version} as string,",
+						"          status as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments') ~> srcCrossref",
+						"srcCrossref foldDown(unroll(message.items, message.items),",
+						"     mapColumn(",
+						"          DOI = message.items.DOI,",
+						"          title = message.items.title,",
+						"          author = message.items.author,",
+						"          container_title = message.items.{container-title},",
+						"          URL = message.items.URL,",
+						"          abstract = message.items.abstract,",
+						"          date_parts = message.items.published.{date-parts}",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> flattenItems",
+						"flattenItems derive(doi_clean = lower(trim(DOI)),",
+						"          research_id = lower(trim(DOI)),",
+						"          title_clean = trim(title[1]),",
+						"          authors_clean = reduce(author, '', #acc + iif(#acc == '', '', '; ') + trim(coalesce(#item.given, '') + ' ' + coalesce(#item.family, '')), #result),",
+						"          journal_clean = iif(isNull(container_title) || size(container_title) == 0, toString(null()), container_title[1]),",
+						"          url_clean = URL,",
+						"          publication_year = toInteger(date_parts[1][1]),",
+						"          publication_date = iif(size(date_parts[1]) >= 3, toDate(concat(toString(date_parts[1][1]), '-', lpad(toString(date_parts[1][2]), 2, '0'), '-', lpad(toString(date_parts[1][3]), 2, '0')), 'yyyy-MM-dd'), toDate(null())),",
+						"          abstract_clean = iif(isNull(abstract), toString(null()), trim(regexReplace(regexReplace(abstract, `<[^>]+>`, ' '), `\\s+`, ' '))),",
+						"          university = 'KAUST',",
+						"          source = 'Crossref',",
+						"          research_field = toString(null()),",
+						"          tech_category = toString(null())) ~> readFields",
+						"readFields select(mapColumn(",
+						"          doi = doi_clean,",
+						"          research_id,",
+						"          title = title_clean,",
+						"          authors = authors_clean,",
+						"          journal = journal_clean,",
+						"          url = url_clean,",
+						"          publication_year,",
+						"          publication_date,",
+						"          abstract = abstract_clean,",
+						"          university,",
+						"          source,",
+						"          research_field,",
+						"          tech_category",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSchema",
+						"selectSchema filter(!isNull(doi) && doi != '' && !isNull(title) && title != ''",
+						"&& !isNull(authors) && authors != '' && !isNull(url) && url != ''",
+						"&& regexMatch(doi, `^10\\.\\d{4,9}/\\S+$`)",
+						"&& publication_year >= 2023 && publication_year <= 2026) ~> validForDb",
+						"validForDb derive(has_doi = !isNull(doi) && doi != '',",
+						"          abstract_word_count = iif(isNull(abstract) || abstract == '', 0, size(split(abstract, ' ')))) ~> addMetrics",
+						"addMetrics sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          research_id as string,",
+						"          university as string,",
+						"          title as string,",
+						"          authors as string,",
+						"          publication_year as integer,",
+						"          publication_date as date,",
+						"          abstract as string,",
+						"          research_field as string,",
+						"          tech_category as string,",
+						"          journal as string,",
+						"          doi as string,",
+						"          url as string,",
+						"          source as string,",
+						"          has_doi as boolean,",
+						"          abstract_word_count as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          research_id,",
+						"          university,",
+						"          title,",
+						"          authors,",
+						"          publication_year,",
+						"          publication_date,",
+						"          abstract,",
+						"          research_field,",
+						"          tech_category,",
+						"          journal,",
+						"          doi,",
+						"          url,",
+						"          source,",
+						"          has_doi,",
+						"          abstract_word_count",
+						"     )) ~> sinkPostgres"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_Publications_Staging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Final_Union_DF')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_KSU_Clean_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "srcKsu"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_Publications_All",
+								"type": "DatasetReference"
+							},
+							"name": "srcPg"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_KFUPM_Validated_Csv",
+								"type": "DatasetReference"
+							},
+							"name": "srcKfupm"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_OpenAlex_Validated_Csv",
+								"type": "DatasetReference"
+							},
+							"name": "srcOpenAlex"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_Final_Dataset_Candidate",
+								"type": "DatasetReference"
+							},
+							"name": "sinkFinal"
+						}
+					],
+					"transformations": [
+						{
+							"name": "castKfupm"
+						},
+						{
+							"name": "unionAll"
+						},
+						{
+							"name": "recompute"
+						},
+						{
+							"name": "isTech"
+						},
+						{
+							"name": "finalSchema"
+						},
+						{
+							"name": "castOpenAlex"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          research_id as string,",
+						"          university as string,",
+						"          title as string,",
+						"          authors as string,",
+						"          abstract as string,",
+						"          journal as string,",
+						"          author_keywords as string,",
+						"          doi as string,",
+						"          url as string,",
+						"          publication_year as integer,",
+						"          publication_date as date,",
+						"          research_field as string,",
+						"          tech_category as string,",
+						"          source as string,",
+						"          has_doi as boolean,",
+						"          abstract_word_count as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     wildcardPaths:['interim/cleaned/ksu/*/*.parquet']) ~> srcKsu",
+						"source(output(",
+						"          research_id as string,",
+						"          university as string,",
+						"          title as string,",
+						"          authors as string,",
+						"          publication_year as integer,",
+						"          publication_date as date,",
+						"          abstract as string,",
+						"          research_field as string,",
+						"          tech_category as string,",
+						"          journal as string,",
+						"          doi as string,",
+						"          url as string,",
+						"          source as string,",
+						"          has_doi as boolean,",
+						"          abstract_word_count as integer,",
+						"          loaded_at as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> srcPg",
+						"source(output(",
+						"          research_id as string,",
+						"          university as string,",
+						"          title as string,",
+						"          authors as string,",
+						"          publication_year as short,",
+						"          publication_date as date,",
+						"          abstract as string,",
+						"          research_field as string,",
+						"          tech_category as string,",
+						"          journal as string,",
+						"          doi as string,",
+						"          url as string,",
+						"          source as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> srcKfupm",
+						"source(output(",
+						"          research_id as string,",
+						"          university as string,",
+						"          title as string,",
+						"          authors as string,",
+						"          publication_year as short,",
+						"          publication_date as string,",
+						"          abstract as string,",
+						"          research_field as string,",
+						"          tech_category as string,",
+						"          journal as string,",
+						"          doi as string,",
+						"          url as string,",
+						"          source as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:['interim/cleaned/openalex/*_validated.csv']) ~> srcOpenAlex",
+						"srcKfupm derive(publication_year = toInteger(publication_year)) ~> castKfupm",
+						"srcPg, srcKsu, castKfupm, castOpenAlex union(byName: true)~> unionAll",
+						"unionAll derive(has_doi = !isNull(doi) && doi != '',",
+						"          abstract_word_count = iif(isNull(abstract) || trim(abstract) == '', 0, size(split(regexReplace(trim(abstract), `\\s+`, ' '), ' '))),",
+						"          tech_text = concat(trim(regexReplace(regexReplace(regexReplace(regexReplace(lower(coalesce(title, '')), `[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2212_]+`, ' '), `\\s+`, ' '), `(?<!\\w)computer vision syndrome(?!\\w)`, ' '), `\\s+`, ' ')), ' | ', trim(regexReplace(regexReplace(regexReplace(regexReplace(lower(coalesce(iif(university == 'KSU', author_keywords, abstract), '')), `[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2212_]+`, ' '), `\\s+`, ' '), `(?<!\\w)computer vision syndrome(?!\\w)`, ' '), `\\s+`, ' ')))) ~> recompute",
+						"recompute filter(regexMatch(tech_text, `(?<!\\w)(artificial intelligence|machine learning|deep learning|neural network|neural networks|multilayer perceptron|random forest|computer vision|natural language processing|large language model|large language models|generative ai|cybersecurity|cyber security|information security|intrusion detection|cryptography|blockchain|software engineering|internet of things|iot|cloud computing|edge computing|wireless network|wireless networks|robotics|robot|robots|data mining|big data|computer science|ann modeling|ann modelling)(?!\\w)`)) ~> isTech",
+						"isTech select(mapColumn(",
+						"          research_id,",
+						"          university,",
+						"          title,",
+						"          authors,",
+						"          publication_year,",
+						"          publication_date,",
+						"          abstract,",
+						"          research_field,",
+						"          tech_category,",
+						"          journal,",
+						"          doi,",
+						"          url,",
+						"          source,",
+						"          has_doi,",
+						"          abstract_word_count",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> finalSchema",
+						"srcOpenAlex derive(publication_year = toInteger(publication_year),",
+						"          publication_date = toDate(null())) ~> castOpenAlex",
+						"finalSchema sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          research_id as string,",
+						"          university as string,",
+						"          title as string,",
+						"          authors as string,",
+						"          publication_year as integer,",
+						"          publication_date as date,",
+						"          abstract as string,",
+						"          research_field as string,",
+						"          tech_category as string,",
+						"          journal as string,",
+						"          doi as string,",
+						"          url as string,",
+						"          source as string,",
+						"          has_doi as boolean,",
+						"          abstract_word_count as integer,",
+						"          loaded_at as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkFinal"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_Publications_All')]",
+				"[concat(variables('factoryId'), '/datasets/DS_OpenAlex_Validated_Csv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KAUST_2023_Clean_DF')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "KAUST_2023_Raw_DS",
+								"type": "DatasetReference"
+							},
+							"name": "srcKAUST2023"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "ADLS_Sink_saudi",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sinkKAUSTClean"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_Publications_Staging",
+								"type": "DatasetReference"
+							},
+							"name": "sinkPostgres"
+						}
+					],
+					"transformations": [
+						{
+							"name": "trimAndNull"
+						},
+						{
+							"name": "parseDate"
+						},
+						{
+							"name": "keep2023"
+						},
+						{
+							"name": "dedupPrep"
+						},
+						{
+							"name": "rankDuplicates"
+						},
+						{
+							"name": "keepFirst"
+						},
+						{
+							"name": "addFields"
+						},
+						{
+							"name": "selectSchema"
+						},
+						{
+							"name": "castTypes"
+						},
+						{
+							"name": "validForDb"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Type as string,",
+						"          Title as string,",
+						"          Authors as string,",
+						"          Journal as string,",
+						"          Publisher as string,",
+						"          DOI as string,",
+						"          Handle as string,",
+						"          {Publication Date} as string,",
+						"          Citation as string,",
+						"          Abstract as string,",
+						"          {Link to License} as string,",
+						"          Status as string,",
+						"          {Link to PDF} as string,",
+						"          {Link to Extracted Text} as string,",
+						"          {Metadata Last Modified} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> srcKAUST2023",
+						"srcKAUST2023 derive(each(match(type=='string'), $$ = iif(trim($$) == '', toString(null()), trim($$)))) ~> trimAndNull",
+						"trimAndNull derive(pub_date = case(     regexMatch({Publication Date}, `^\\d{4}-\\d{1,2}-\\d{1,2}$`),     toDate({Publication Date}, 'yyyy-M-d'),     regexMatch({Publication Date}, `^\\d{4}-\\d{2}-\\d{2}T`),     toDate(left({Publication Date}, 10), 'yyyy-MM-dd'),     toDate(null()) ),",
+						"          pub_year = iif(     regexMatch({Publication Date}, `^\\d{4}($|-)`),     toInteger(left({Publication Date}, 4)),     toInteger(null()) )) ~> parseDate",
+						"parseDate filter(!isNull(pub_year) && pub_year == 2023) ~> keep2023",
+						"keep2023 derive(dedup_key = iif(     isNull(DOI),     Handle,     concat(         DOI, '|',         coalesce(Title, ''), '|',         coalesce(Type, ''), '|',         coalesce({Publication Date}, '')     ) ),",
+						"          completeness = iif(isNull(Type),0,1) + iif(isNull(Title),0,1) + iif(isNull(Authors),0,1) + iif(isNull(Journal),0,1) + iif(isNull(Publisher),0,1) + iif(isNull(DOI),0,1) + iif(isNull(Handle),0,1) + iif(isNull(Citation),0,1) + iif(isNull(Abstract),0,1) + iif(isNull({Link to License}),0,1) + iif(isNull(Status),0,1) + iif(isNull({Link to PDF}),0,1) + iif(isNull({Link to Extracted Text}),0,1)) ~> dedupPrep",
+						"dedupPrep window(over(dedup_key),",
+						"     desc(completeness, true),",
+						"     desc({Metadata Last Modified}, true),",
+						"     rn = rowNumber()) ~> rankDuplicates",
+						"rankDuplicates filter(rn == 1) ~> keepFirst",
+						"keepFirst derive(research_id = Handle,",
+						"          university = 'KAUST',",
+						"          publication_year = pub_year,",
+						"          publication_date = toString(pub_date, 'yyyy-MM-dd'),",
+						"          research_field = toString(null()),",
+						"          tech_category = toString(null()),",
+						"          url = Handle,",
+						"          source = 'KAUST Repository',",
+						"          doi_clean = lower(DOI)) ~> addFields",
+						"addFields select(mapColumn(",
+						"          research_id,",
+						"          university,",
+						"          title = Title,",
+						"          authors = Authors,",
+						"          publication_year,",
+						"          publication_date,",
+						"          abstract = Abstract,",
+						"          research_field,",
+						"          tech_category,",
+						"          journal = Journal,",
+						"          doi = doi_clean,",
+						"          url,",
+						"          source",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSchema",
+						"selectSchema cast(output(",
+						"          publication_year as integer,",
+						"          publication_date as date 'yyyy-MM-dd'",
+						"     ),",
+						"     errors: true) ~> castTypes",
+						"castTypes filter(!isNull(publication_year)",
+						"&& publication_year == 2023",
+						"&& !isNull(doi) && trim(doi) != ''",
+						"&& !isNull(authors) && trim(authors) != ''",
+						"&& !isNull(title) && trim(title) != ''",
+						"&& !isNull(url) && trim(url) != '') ~> validForDb",
+						"castTypes sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'saudi-tech-research',",
+						"     folderPath: 'interim/cleaned/kaust_2023',",
+						"     truncate: true,",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\"',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     partitionFileNames:['KAUST_2023_cleaned.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sinkKAUSTClean",
+						"validForDb sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          research_id as string,",
+						"          university as string,",
+						"          title as string,",
+						"          authors as string,",
+						"          publication_year as integer,",
+						"          publication_date as date,",
+						"          abstract as string,",
+						"          research_field as string,",
+						"          tech_category as string,",
+						"          journal as string,",
+						"          doi as string,",
+						"          url as string,",
+						"          source as string,",
+						"          has_doi as boolean,",
+						"          abstract_word_count as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     batchSize: 1000,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          research_id,",
+						"          university,",
+						"          title,",
+						"          authors,",
+						"          publication_year,",
+						"          publication_date,",
+						"          abstract,",
+						"          research_field,",
+						"          tech_category,",
+						"          journal,",
+						"          doi,",
+						"          url,",
+						"          source",
+						"     )) ~> sinkPostgres"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/KAUST_2023_Raw_DS')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Publications_Staging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KSU_Clean_DF')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_KSU_Json",
+								"type": "DatasetReference"
+							},
+							"name": "srcKSU"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_KSU_Enrichment",
+								"type": "DatasetReference"
+							},
+							"name": "srcEnrichment"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_KSU_Clean_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "sinkKsuClean"
+						}
+					],
+					"transformations": [
+						{
+							"name": "addRowIndex"
+						},
+						{
+							"name": "cleanFields"
+						},
+						{
+							"name": "renameEnrichment"
+						},
+						{
+							"name": "joinEnrichment"
+						},
+						{
+							"name": "applyEnrichment"
+						},
+						{
+							"name": "selectSchema"
+						},
+						{
+							"name": "validForDb"
+						},
+						{
+							"name": "addMetrics"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     year as integer (2023)",
+						"}",
+						"source(output(",
+						"          Authors as string,",
+						"          {Article Title} as string,",
+						"          {Source Title} as string,",
+						"          {Document Type} as string,",
+						"          {Author Keywords} as string,",
+						"          Abstract as string,",
+						"          Affiliations as string,",
+						"          DOI as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments',",
+						"     backslashEscape: true) ~> srcKSU",
+						"source(output(",
+						"          abstract as string,",
+						"          abstract_source as string,",
+						"          doi as string,",
+						"          doi_source as string,",
+						"          evidence as string,",
+						"          research_id as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments') ~> srcEnrichment",
+						"srcKSU keyGenerate(output(row_idx as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> addRowIndex",
+						"addRowIndex derive(research_id = concat('KSU_', toString($year), '_', toString(row_idx - 1)),",
+						"          university = 'KSU',",
+						"          title_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim({Article Title}))), toString(null()), trim({Article Title})),",
+						"          authors_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim(Authors))), toString(null()), trim(Authors)),",
+						"          abstract_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim(Abstract))), toString(null()), trim(Abstract)),",
+						"          journal_clean = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim({Source Title}))), toString(null()), trim({Source Title})),",
+						"          author_keywords = iif(in(['','n/a','na','nan','none','null','<na>','nat'], lower(trim({Author Keywords}))), toString(null()), trim({Author Keywords})),",
+						"          doi_clean = iif(isNull(DOI), toString(null()), lower(regexReplace(regexExtract(regexReplace(trim(DOI), `(?i)^(https?://(dx\\.)?doi\\.org/|doi:\\s*)`, ''), `(?i)(10\\.\\d{4,9}/\\S+)`, 1), `\\.+$`, ''))),",
+						"          url_clean = concat('https://data.ksu.edu.sa/sites/data.ksu.edu.sa/files/users/user976/KSU-DMO-OD-DATASET-SciResarch-Publications-', toString($year), '.json'),",
+						"          publication_year = $year,",
+						"          publication_date = toDate(null()),",
+						"          research_field = toString(null()),",
+						"          tech_category = toString(null()),",
+						"          source = 'KSU') ~> cleanFields",
+						"srcEnrichment select(mapColumn(",
+						"          enr_abstract = abstract,",
+						"          enr_doi = doi,",
+						"          enr_id = research_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> renameEnrichment",
+						"cleanFields, renameEnrichment join(research_id == enr_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> joinEnrichment",
+						"joinEnrichment derive(doi_clean = iif(isNull(doi_clean) || doi_clean == '', lower(trim(enr_doi)), doi_clean),",
+						"          abstract_clean = iif(isNull(abstract_clean), enr_abstract, abstract_clean)) ~> applyEnrichment",
+						"cleanFields select(mapColumn(",
+						"          research_id,",
+						"          university,",
+						"          title = title_clean,",
+						"          authors = authors_clean,",
+						"          abstract = abstract_clean,",
+						"          journal = journal_clean,",
+						"          author_keywords,",
+						"          doi = doi_clean,",
+						"          url = url_clean,",
+						"          publication_year,",
+						"          publication_date,",
+						"          research_field,",
+						"          tech_category,",
+						"          source",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSchema",
+						"selectSchema filter(!isNull(doi) && doi != '' && regexMatch(doi, `^10\\.\\d{4,9}/\\S+$`) && !isNull(title) && !isNull(authors)) ~> validForDb",
+						"validForDb derive(has_doi = !isNull(doi) && doi != '',",
+						"          abstract_word_count = iif(isNull(abstract) || abstract == '', 0, size(split(abstract, ' ')))) ~> addMetrics",
+						"addMetrics sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     truncate: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkKsuClean"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_KSU_Json')]",
+				"[concat(variables('factoryId'), '/datasets/DS_KSU_Enrichment')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KAUST_Clean_Pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "KAUST_2023_Clean_DF",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DownloadCsv",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "KAUST_2023_Clean_DF",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"srcKAUST2023": {},
+									"sinkKAUSTClean": {},
+									"sinkPostgres": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "GetBundles",
+						"type": "WebActivity",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": "https://repository.kaust.edu.sa/server/api/core/items/1fca5bb2-aa40-4d1b-8d58-285b9e1623d7/bundles"
+						}
+					},
+					{
+						"name": "GetBitstreams",
+						"type": "WebActivity",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [
+							{
+								"activity": "GetBundles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://repository.kaust.edu.sa/server/api/core/bundles/', activity('GetBundles').output._embedded.bundles[0].uuid, '/bitstreams')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "DownloadCsv",
+						"type": "Copy",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [
+							{
+								"activity": "GetBitstreams",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET",
+									"additionalHeaders": "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\nAccept: text/csv,application/octet-stream,*/*",
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_KAUST_Bitstream",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_KAUST_Raw_File_ADLS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "MergeToFinal",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "KAUST_2023_Clean_DF",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_Postgres",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "INSERT INTO research.publications AS p (research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, has_doi, abstract_word_count) SELECT DISTINCT ON (research_id) research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, COALESCE(has_doi, doi IS NOT NULL), COALESCE(abstract_word_count, 0) FROM research.publications_staging ORDER BY research_id ON CONFLICT (research_id) DO UPDATE SET university = EXCLUDED.university, title = EXCLUDED.title, authors = EXCLUDED.authors, publication_year = EXCLUDED.publication_year, publication_date = EXCLUDED.publication_date, abstract = EXCLUDED.abstract, research_field = EXCLUDED.research_field, tech_category = EXCLUDED.tech_category, journal = EXCLUDED.journal, doi = EXCLUDED.doi, url = EXCLUDED.url, source = EXCLUDED.source, has_doi = EXCLUDED.has_doi, abstract_word_count = EXCLUDED.abstract_word_count, loaded_at = now();"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {
+						"duration": "00:20:00"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-18T20:00:36Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/KAUST_2023_Clean_DF')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Final_Union')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "RunFinalUnion",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Final_Union_DF",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"srcKsu": {
+										"year": "2023"
+									},
+									"srcPg": {},
+									"srcKfupm": {},
+									"srcOpenAlex": {},
+									"sinkFinal": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "ValidateCandidate",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "RunFinalUnion",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_Postgres",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "DO $$\nBEGIN\n    IF NOT EXISTS (\n        SELECT 1 FROM research.final_dataset_candidate\n    ) THEN\n        RAISE EXCEPTION 'Candidate dataset is empty';\n    END IF;\n\n    IF EXISTS (\n        SELECT 1\n        FROM research.final_dataset_candidate AS d\n        CROSS JOIN LATERAL (\n            VALUES\n                (d.research_id::text),\n                (d.university::text),\n                (d.title::text),\n                (d.authors::text),\n                (d.publication_year::text),\n                (d.doi::text),\n                (d.url::text),\n                (d.source::text)\n        ) AS required_values(value)\n        WHERE value IS NULL\n           OR lower(btrim(value)) IN (\n               '', 'n/a', 'na', 'nan',\n               'none', 'null', '<na>', 'nat'\n           )\n    ) THEN\n        RAISE EXCEPTION 'Missing mandatory values';\n    END IF;\n\n    IF EXISTS (\n        SELECT 1\n        FROM research.final_dataset_candidate\n        WHERE university NOT IN (\n            'KAUST', 'KFUPM', 'KSU', 'KAU', 'KKU', 'PSAU'\n        )\n    ) THEN\n        RAISE EXCEPTION 'Unexpected university';\n    END IF;\n\n    IF (\n        SELECT COUNT(DISTINCT university)\n        FROM research.final_dataset_candidate\n    ) <> 6 THEN\n        RAISE EXCEPTION 'Expected all six universities';\n    END IF;\n\n    IF EXISTS (\n        SELECT 1\n        FROM research.final_dataset_candidate\n        WHERE publication_year NOT BETWEEN 2023 AND 2026\n           OR publication_year <> trunc(publication_year::numeric)\n    ) THEN\n        RAISE EXCEPTION 'Invalid publication year';\n    END IF;\n\n    IF EXISTS (\n        SELECT 1\n        FROM research.final_dataset_candidate\n        WHERE doi !~* '^10\\.[0-9]{4,9}/[^[:space:]]+$'\n    ) THEN\n        RAISE EXCEPTION 'Invalid DOI format';\n    END IF;\n\n    IF EXISTS (\n        SELECT 1\n        FROM research.final_dataset_candidate\n        WHERE url !~* '^https?://[^/?#[:space:]]+'\n           OR url ~ '[[:space:]]'\n    ) THEN\n        RAISE EXCEPTION 'Invalid URL format';\n    END IF;\n\n    IF EXISTS (\n        SELECT 1\n        FROM research.final_dataset_candidate\n        WHERE publication_date IS NOT NULL\n          AND EXTRACT(YEAR FROM publication_date) <> publication_year\n    ) THEN\n        RAISE EXCEPTION 'Publication date/year mismatch';\n    END IF;\n\n    IF EXISTS (\n        SELECT research_id\n        FROM research.final_dataset_candidate\n        GROUP BY research_id\n        HAVING COUNT(*) > 1\n    ) THEN\n        RAISE EXCEPTION 'Duplicate research_id';\n    END IF;\n\n    IF EXISTS (\n        SELECT university, lower(btrim(doi))\n        FROM research.final_dataset_candidate\n        GROUP BY university, lower(btrim(doi))\n        HAVING COUNT(*) > 1\n    ) THEN\n        RAISE EXCEPTION 'Duplicate DOI within university';\n    END IF;\nEND $$;"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "PublishFinal",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "ValidateCandidate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_Postgres",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "BEGIN;\n\nLOCK TABLE research.final_dataset_candidate IN SHARE MODE;\n\nTRUNCATE TABLE research.final_dataset;\n\nINSERT INTO research.final_dataset (\n    research_id,\n    university,\n    title,\n    authors,\n    publication_year,\n    publication_date,\n    abstract,\n    research_field,\n    tech_category,\n    journal,\n    doi,\n    url,\n    source,\n    has_doi,\n    abstract_word_count\n)\nSELECT\n    research_id,\n    university,\n    title,\n    authors,\n    publication_year,\n    publication_date,\n    abstract,\n    research_field,\n    tech_category,\n    journal,\n    doi,\n    url,\n    source,\n    has_doi,\n    abstract_word_count\nFROM research.final_dataset_candidate;\n\nCOMMIT;"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-19T20:46:24Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Final_Union_DF')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Ingest_Crossref')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "FetchCrossref",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "RestSource",
+								"httpRequestTimeout": "00:05:00",
+								"requestInterval": "00.00:00:00.010",
+								"requestMethod": "GET",
+								"paginationRules": {
+									"QueryParameters.cursor": "$.message['next-cursor']",
+									"EndCondition:$.message.items": "Empty"
+								}
+							},
+							"sink": {
+								"type": "JsonSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings",
+									"filePattern": "arrayOfObjects"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_Crossref_Rest",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_Crossref_Json_Write",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "CleanCrossref",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "FetchCrossref",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Crossref_Clean_DF",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"srcCrossref": {},
+									"sinkPostgres": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "MergeToFinal",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "CleanCrossref",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_Postgres",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "INSERT INTO research.publications AS p (research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, has_doi, abstract_word_count) SELECT DISTINCT ON (research_id) research_id, university, title, authors, publication_year, publication_date, abstract, research_field, tech_category, journal, doi, url, source, COALESCE(has_doi, doi IS NOT NULL), COALESCE(abstract_word_count, 0) FROM research.publications_staging ORDER BY research_id ON CONFLICT (research_id) DO UPDATE SET university = EXCLUDED.university, title = EXCLUDED.title, authors = EXCLUDED.authors, publication_year = EXCLUDED.publication_year, publication_date = EXCLUDED.publication_date, abstract = EXCLUDED.abstract, research_field = EXCLUDED.research_field, tech_category = EXCLUDED.tech_category, journal = EXCLUDED.journal, doi = EXCLUDED.doi, url = EXCLUDED.url, source = EXCLUDED.source, has_doi = EXCLUDED.has_doi, abstract_word_count = EXCLUDED.abstract_word_count, loaded_at = now();"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-19T15:23:09Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Crossref_Clean_DF')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Ingest_KFUPM')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachYear",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.year",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "RunYearHarvest",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_Harvest_KFUPM_Year",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"year": {
+												"value": "@string(item())",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ProcessKfupm",
+						"type": "AzureFunctionActivity",
+						"dependsOn": [
+							{
+								"activity": "ForEachYear",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"functionName": "process/kfupm",
+							"body": {
+								"caller": "adf"
+							},
+							"headers": {},
+							"method": "POST"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_Func_Process",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"year": {
+						"type": "array",
+						"defaultValue": [
+							2024,
+							2025,
+							2026
+						]
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-21T07:26:18Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_Harvest_KFUPM_Year')]"
+			]
+		}
+	]
+}
