@@ -3375,7 +3375,7 @@
 						"     broadcast: 'right')~> joinEnrichment",
 						"joinEnrichment derive(doi_clean = iif(isNull(doi_clean) || doi_clean == '', lower(trim(enr_doi)), doi_clean),",
 						"          abstract_clean = iif(isNull(abstract_clean), enr_abstract, abstract_clean)) ~> applyEnrichment",
-						"cleanFields select(mapColumn(",
+						"applyEnrichment select(mapColumn(",
 						"          research_id,",
 						"          university,",
 						"          title = title_clean,",
