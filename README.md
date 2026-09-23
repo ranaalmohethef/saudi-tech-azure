@@ -242,3 +242,11 @@ checks and emails then run on the last published data.
 | KFUPM raw pages | Pages are overwritten by name; old extra pages are not deleted if a later harvest returns fewer pages. |
 | Function timeouts | Each process call runs within one HTTP request (Data Factory waits up to ~230 s); current runs finish in under a minute. |
 | OpenAlex | Live source; counts can grow between runs. |
+
+
+
+## Architecture
+
+![Architecture](docs/architecture.png)
+
+
