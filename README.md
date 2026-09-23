@@ -247,6 +247,6 @@ checks and emails then run on the last published data.
 
 ## Architecture
 
-![Architecture](docs/architecture.png)
+![Architecture](docs/architecture/Diraya_Diagram.png)
 
 
