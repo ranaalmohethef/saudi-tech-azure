@@ -1,0 +1,5 @@
+Put the team photos here:
+  rana-ayman.jpg
+  rana-saad.jpg
+  aryam.jpg
+Square photos look best. If a photo is missing, the initials show instead.

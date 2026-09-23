@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diraya · Saudi Tech Research Hub</title>
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&family=Alexandria:wght@400;700;800&family=Reem+Kufi:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;800&family=Changa:wght@400;700;800&family=Kufam:wght@400;700;800&family=Rubik:wght@400;700;800&family=Tajawal:wght@400;700;800&family=Cairo:wght@400;700;800&family=Almarai:wght@400;700;800&family=Zain:wght@400;700;800&family=Marhey:wght@400;700&family=Lalezar&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem("diraya-theme"); } catch (e) {}
+    if (!t) t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+</head>
+<body>
+<div id="particles-js"></div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#overview">
+      <!-- Diraya logo: logo.png for light mode, logo-dark.png for dark mode -->
+      <img src="logo.png" alt="Diraya" class="brand-logo logo-light">
+      <img src="logo-dark.png" alt="Diraya" class="brand-logo logo-dark">
+      <span class="brand-text">
+        <span class="brand-name" data-i="brand">Diraya</span>
+        <small class="brand-team" data-i="team_name">Saudi Tech Research Hub</small>
+      </span>
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a href="#analytics" data-i="nav_a">Research Analytics</a>
+      <a href="#explorer" data-i="nav_x">Dataset Explorer</a>
+      <a href="#architecture" data-i="nav_m">Architecture</a>
+      <a href="#team" data-i="nav_t">Team</a>
+    </nav>
+    <button class="theme" id="themeBtn" type="button" aria-label="Dark / light mode">
+      <svg class="moon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="sun" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></g></svg>
+    </button>
+    <button class="lang" id="langBtn" type="button">العربية</button>
+  </div>
+</header>
+
+<main>
+  <!-- Hero (KPIs) -->
+  <section class="hero" id="overview">
+    <div class="wrap">
+      <h1 data-i="h1">Saudi Technology Research Intelligence Hub</h1>
+      <p class="question" data-i="question">Explore technology research trends from Saudi universities through a unified research dataset.</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title" data-i="k_papers">Total Technology Papers</div>
+          <div class="kpi-value num" id="statPapers">…</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title" data-i="k_valid">Validated Records</div>
+          <div class="kpi-value num" id="statValidated">…</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title" data-i="k_unis">Universities</div>
+          <div class="kpi-value num" id="statUnis">…</div>
+        </div>
+      </div>
+
+      <div class="src-badge" id="srcBadge"><i></i><span id="srcText">…</span></div>
+    </div>
+  </section>
+
+  <!-- Research Analytics -->
+  <section class="block" id="analytics">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <h2 data-i="a_h">Research Analytics &amp; Insights</h2>
+          <p class="lede" data-i="a_lede">Select a university to interactively filter all charts and metrics.</p>
+        </div>
+        <div class="filters" role="group" aria-label="University filter" id="uniChips"></div>
+      </div>
+
+      <div class="unis" id="uniCards"></div>
+
+      <div class="grid">
+        <div class="panel span-7">
+          <div class="panel-head">
+            <div><h3 data-i="c_year">Research Publications Over Time</h3><p class="sub" data-i="c_year_s">Technology papers per year</p></div>
+            <div class="legend" id="yearLegend"></div>
+          </div>
+          <div class="ychart" id="yearChart"></div>
+        </div>
+
+        <div class="panel span-5">
+          <div class="panel-head">
+            <div><h3 data-i="c_topic">Technology Research Areas</h3><p class="sub" data-i="c_topic_s">Most active domains</p></div>
+          </div>
+          <div class="hbars" id="topicBars"></div>
+        </div>
+
+        <div class="panel span-6">
+          <div class="panel-head">
+            <div><h3 data-i="c_j">Publication Sources</h3><p class="sub" data-i="c_j_s">Top journals and conferences</p></div>
+          </div>
+          <div class="hbars journals" id="journalBars"></div>
+        </div>
+
+        <div class="panel span-6">
+          <div class="panel-head">
+            <div><h3 data-i="c_f">University Comparison</h3><p class="sub" data-i="c_f_s">Data funnel from extraction to final dataset</p></div>
+          </div>
+          <div class="tbl-wrap">
+            <table class="funnel">
+              <thead><tr><th data-i="th_u">University</th><th class="n" data-i="th_c">Cleaned</th><th class="n" data-i="th_v">Validated</th><th class="n" data-i="th_t">Technology</th></tr></thead>
+              <tbody id="funnelBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dataset Explorer -->
+  <section class="block" id="explorer">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <h2 data-i="x_h">Dataset Explorer</h2>
+          <p class="lede" data-i="x_lede">Interactive search across the finalized technology dataset.</p>
+        </div>
+      </div>
+      <div class="xbar">
+        <input class="field search" id="q" type="search" autocomplete="off" placeholder="Search title, author, journal, DOI">
+        <select class="field" id="fUni" aria-label="University"></select>
+        <select class="field" id="fYear" aria-label="Year"></select>
+        <select class="field" id="fTopic" aria-label="Topic"></select>
+      </div>
+      <div class="xmeta"><span id="xcount" class="num"></span><button class="clear" id="xclear" type="button" data-i="clear">Clear filters</button></div>
+      <div class="list" id="xlist"></div>
+      <div class="pager"><button id="prev" type="button" data-i="prev">Previous</button><span id="pinfo" class="num"></span><button id="next" type="button" data-i="next">Next</button></div>
+    </div>
+  </section>
+
+  <!-- Architecture & Methodology -->
+  <section class="block" id="architecture">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 data-i="m_h">Architecture &amp; Methodology</h2></div>
+      </div>
+
+      <div class="method-card">
+        <div class="kv"><span data-i="m_src">Dataset Sources</span><b id="srcList">…</b></div>
+        <div class="kv"><span data-i="m_time">Timeframe</span><b id="timeframe">…</b></div>
+        <div class="kv"><span data-i="m_schema">Data Schema</span><b data-i="m_schema_v">13 Normalized Fields</b></div>
+        <div class="kv"><span data-i="m_update">Last Update</span><b id="lastUpdate">…</b></div>
+      </div>
+
+      <!-- Pipeline flow: the steps we built -->
+      <div class="simple-flow">
+        <div class="step" data-i="f1">Research Sources</div><div class="arr">→</div>
+        <div class="step" data-i="f2">Azure Data Factory</div><div class="arr">→</div>
+        <div class="step" data-i="f3">Raw Zone (ADLS)</div><div class="arr">→</div>
+        <div class="step" data-i="f4">Clean &amp; Validate</div><div class="arr">→</div>
+        <div class="step" data-i="f5">Union &amp; Technology Filter</div><div class="arr">→</div>
+        <div class="step" data-i="f6">Quality Gate</div><div class="arr">→</div>
+        <div class="step" data-i="f7">PostgreSQL</div><div class="arr">→</div>
+        <div class="step highlight" data-i="f8">Web Dashboard</div>
+      </div>
+      <p class="flow-note" data-i="f_note">(PL_Master): One master pipeline runs every step in order and sends an email after each run.</p>
+    </div>
+  </section>
+
+  <!-- Team: the whole card links to LinkedIn. Photos go in static/team/ -->
+  <section class="block" id="team">
+    <div class="wrap">
+      <div class="sec-head"><div>
+        <h2 data-i="t_h">Engineering Team</h2>
+        <p class="lede" data-i="t_lede">Click a name to open the LinkedIn profile.</p>
+      </div></div>
+      <div class="team">
+        <a href="https://www.linkedin.com/in/rana-almohethef" target="_blank" rel="noopener" class="person-card">
+          <img class="photo" src="team/rana-ayman.jpg" alt="Rana Ayman Almohethef" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+          <div class="av" style="display:none">RA</div>
+          <div class="person-info">
+            <div class="n" data-i="n1">Rana Ayman Almohethef</div>
+            <div class="li"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5.4c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9V21H9z"/></svg><span data-i="t_link">LinkedIn profile</span></div>
+          </div>
+        </a>
+        <a href="https://www.linkedin.com/in/rana-alhasaniah-2a9a0221b" target="_blank" rel="noopener" class="person-card">
+          <img class="photo" src="team/rana-saad.jpg" alt="Rana Saad AlHasaniah" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+          <div class="av" style="display:none">RS</div>
+          <div class="person-info">
+            <div class="n" data-i="n2">Rana Saad AlHasaniah</div>
+            <div class="li"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5.4c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9V21H9z"/></svg><span data-i="t_link">LinkedIn profile</span></div>
+          </div>
+        </a>
+        <a href="https://www.linkedin.com/in/aryamalotaibi" target="_blank" rel="noopener" class="person-card">
+          <img class="photo" src="team/aryam.jpg" alt="Aryam Saad Alotaibi" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+          <div class="av" style="display:none">AA</div>
+          <div class="person-info">
+            <div class="n" data-i="n3">Aryam Saad Alotaibi</div>
+            <div class="li"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5.4c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9V21H9z"/></svg><span data-i="t_link">LinkedIn profile</span></div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span data-i="foot">Python · Azure Data Factory · ADLS Gen2 · Azure Functions · PostgreSQL · Flask</span>
+  </div>
+</footer>
+
+<div class="tip" id="tip" hidden></div>
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script src="particles.js"></script>
+</body>
+</html>
