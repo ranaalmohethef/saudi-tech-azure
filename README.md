@@ -424,8 +424,3 @@ Diraya provides research metadata, search, and descriptive analytics for the six
 It does not host full research papers. Access to full text depends on the original publisher or repository.
 
 
-## Architecture
-
-![Architecture](docs/architecture/Diraya_Diagram.png)
-
-
