@@ -14,7 +14,7 @@ The following figures describe the saved project snapshot dated September 22, 20
 |---|---:|
 | Technology-related research records | 5,341 |
 | Distinct DOIs across all universities | 4,984 |
-| Validated records before technology filtering | 22,944 |
+| Validated records before technology filtering | 22,957 |
 | Universities | 6 |
 | Publication years covered | 2023–2026 |
 
