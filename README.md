@@ -1,5 +1,4 @@
 # Diraya — Saudi Technology Research Hub
-![tests](https://github.com/ranaalmohethef/saudi-tech-research/actions/workflows/tests.yml/badge.svg)
 
 Diraya collects research metadata from six Saudi universities, standardizes and validates it, and publishes technology-related records through a searchable website.
 
@@ -63,7 +62,7 @@ These are indicative figures from a small sample, not a formal measurement. Reca
 | `docs/Documents/` | Project report in PDF and Word formats |
 | `docs/architecture/` | Architecture diagram in PNG and PDF formats |
 
-The Python pipeline source and its 129 unit tests, run automatically on every push are maintained in a separate repository: [ranaalmohethef/saudi-tech-research](https://github.com/ranaalmohethef/saudi-tech-research). The modules under `azure_function/src/` in this repository are the deployed copies of that code.
+The Python pipeline source and its 129 unit tests (run automatically on every push) are maintained in a separate repository: [ranaalmohethef/saudi-tech-research](https://github.com/ranaalmohethef/saudi-tech-research). The modules under `azure_function/src/` in this repository are the deployed copies of that code.
 
 ## 3. Architecture
 
