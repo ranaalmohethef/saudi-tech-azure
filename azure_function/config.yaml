@@ -19,7 +19,7 @@ sources:
     cleaned: KAUST_2023_cleaned.csv
 
   kaust_crossref:
-    pattern: pattern: KAUST_Crossref_2024_2026_page_*.json
+    pattern: KAUST_Crossref_2024_2026_page_*.json
     from_year: 2024
     until_year: 2026
     university: KAUST
