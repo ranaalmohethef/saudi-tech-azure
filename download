@@ -1,3 +1,25 @@
+# Local credentials — never commit
 .env
+.env.*
+!.env.example
+*.pem
+local.settings.json
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Azure Functions build output
+azure_function/saudi_tech_function.zip
+bin/
+obj/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
