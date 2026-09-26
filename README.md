@@ -8,29 +8,41 @@ The project combines Azure Data Factory, Azure Functions, Azure Data Lake Storag
 
 ## 1. Results
 
-The following figures describe the saved project snapshot dated September 22, 2026. Live counts may change after subsequent pipeline runs.
+The following figures describe the pipeline run of September 26, 2026. Live counts may change after subsequent pipeline runs.
 
 | Metric | Value |
 |---|---:|
-| Technology-related research records | 5,341 |
-| Distinct DOIs across all universities | 4,984 |
-| Validated records before technology filtering | 22,957 |
+| Technology-related research records | 5,344 |
+| Distinct DOIs across all universities | 4,987 |
+| Validated records before technology filtering | 22,960 |
 | Universities | 6 |
 | Publication years covered | 2023–2026 |
 
 | University | Final records |
 |---|---:|
 | KSU | 1,483 |
-| KAU | 1,400 |
-| KKU | 1,101 |
-| PSAU | 1,015 |
+| KAU | 1,404 |
+| KKU | 1,097 |
+| PSAU | 1,017 |
 | KFUPM | 211 |
-| KAUST | 131 |
-| **Total** | **5,341** |
+| KAUST | 132 |
+| **Total** | **5,344** |
 
 A research paper associated with more than one included university may appear once for each university. Therefore, the number of university-associated records differs from the number of distinct DOIs.
 
 These counts describe the collected dataset and are not a ranking of universities.
+
+### Technology Filter Accuracy
+
+The 33-term technology filter was reviewed by hand on a sample of about 60 papers drawn from both the published dataset and the rejected rows.
+
+| Measure | Sample result |
+|---|---:|
+| Precision | ≈ 93% |
+| Recall | ≈ 68% |
+| Agreement with manual reading | ≈ 88% |
+
+These are indicative figures from a small sample, not a formal measurement. Recall is the known weak point: a paper that uses none of the 33 terms is never kept. A labelled evaluation over 200 randomly drawn papers is the planned next step.
 
 ## 2. Repository Contents
 
@@ -49,6 +61,8 @@ These counts describe the collected dataset and are not a ranking of universitie
 | `Website/` | Flask API, website, saved data, and local setup instructions |
 | `docs/Documents/` | Project report in PDF and Word formats |
 | `docs/architecture/` | Architecture diagram in PNG and PDF formats |
+
+The Python pipeline source and its unit tests are maintained in a separate repository: [ranaalmohethef/saudi-tech-research](https://github.com/ranaalmohethef/saudi-tech-research). The modules under `azure_function/src/` in this repository are the deployed copies of that code.
 
 ## 3. Architecture
 
@@ -390,6 +404,7 @@ ORDER BY university;
 - Website credentials are stored locally in `.env`.
 - Do not commit passwords, function keys, callback secrets, or populated `.env` files.
 - `.env.example` contains configuration placeholders for local setup.
+- `.gitignore` excludes `.env`, Python caches, and build output from version control.
 
 ## 12. Deployment Requirements and Limitations
 
@@ -416,11 +431,10 @@ A separate environment requires Azure resources, database table definitions, con
 - [Project report — Word](docs/Documents/Diraya_Project_Document.docx)
 - [Architecture diagram — PDF](docs/architecture/Diraya_Diagram.pdf)
 - [Website instructions](Website/README.md)
+- [Python pipeline source and tests](https://github.com/ranaalmohethef/saudi-tech-research)
 
 ## 14. Scope
 
 Diraya provides research metadata, search, and descriptive analytics for the six included universities within the configured source and year coverage.
 
 It does not host full research papers. Access to full text depends on the original publisher or repository.
-
-
